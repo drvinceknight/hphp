@@ -276,4 +276,7 @@ TSWLatexianTemp*
 *.lpz
 
 # Python files
-nbs/.ipynb_checkpoints/*
+*ipynb_checkpoints/*
+
+# Environment directory
+env/
