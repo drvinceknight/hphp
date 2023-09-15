@@ -1,6 +1,5 @@
 name: CI
 
-
 on:
   push:
   pull_request:
@@ -11,24 +10,28 @@ jobs:
     #runs-on: [ubuntu-latest, macOS-latest]  # TODO Add check for macOS
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Install Conda
-      uses: s-weigand/setup-conda@v1
-    - name: Install LaTeX
-      run: |
-        sudo apt-get update
-        #LaTeX packages
-        sudo apt-get install -y texlive-latex-extra
-        sudo apt-get install -y texlive-xetex
-        sudo apt-get install texlive-bibtex-extra biber
-        sudo apt-get install -y texlive-lang-greek
-        sudo apt-get install -y latexmk
-        sudo apt-get install lmodern
-        sudo apt-get install texlive-fonts-extra
-    - name: Check LaTeX compiles
-      run: |
-        cd tex; xelatex -interaction=nonstopmode -shell-escape main.tex
-    - name: Validate notebooks
-      run: |
-        python -m pip install nbval pytest
-        python -m pytest -vv --nbval --current-env
+      - uses: actions/checkout@v2
+      - name: Install Conda
+        uses: s-weigand/setup-conda@v1
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          #LaTeX packages
+          sudo apt-get install -y texlive-latex-extra
+          sudo apt-get install -y texlive-xetex
+          sudo apt-get install texlive-bibtex-extra biber
+          sudo apt-get install -y texlive-lang-greek
+          sudo apt-get install -y latexmk
+          sudo apt-get install lmodern
+          sudo apt-get install texlive-fonts-extra
+      - name: Check LaTeX compiles
+        run: |
+          cd tex; xelatex -interaction=nonstopmode -shell-escape main.tex
+      - name: Install requirements
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r requirements.txt
+      - name: Validate notebooks
+        run: |
+          python -m pip install nbval pytest
+          python -m pytest -vv --nbval --current-env .
