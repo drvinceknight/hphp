@@ -1,11 +1,131 @@
 import random
 
+def death(age):
+    """
+    This uses data from the UN's department of economic and social affairs
+    https://population.un.org/wpp/Download/Standard/Mortality/
+    to return a boolean representing whether or not someone has a death at a
+    given age.
+
+    Life Tables - Abridged
+
+    """
+    probability_of_death_at_give_age = [
+        0.02793,
+        0.00351,
+        0.00244,
+        0.00193,
+        0.00160,
+        0.00137,
+        0.00118,
+        0.00101,
+        0.00087,
+        0.00076,
+        0.00069,
+        0.00066,
+        0.00065,
+        0.00069,
+        0.00077,
+        0.00088,
+        0.00100,
+        0.00113,
+        0.00125,
+        0.00135,
+        0.00142,
+        0.00148,
+        0.00153,
+        0.00156,
+        0.00159,
+        0.00162,
+        0.00165,
+        0.00168,
+        0.00172,
+        0.00177,
+        0.00180,
+        0.00185,
+        0.00194,
+        0.00202,
+        0.00212,
+        0.00225,
+        0.00239,
+        0.00254,
+        0.00268,
+        0.00283,
+        0.00303,
+        0.00323,
+        0.00345,
+        0.00368,
+        0.00391,
+        0.00415,
+        0.00441,
+        0.00470,
+        0.00506,
+        0.00548,
+        0.00596,
+        0.00651,
+        0.00711,
+        0.00777,
+        0.00847,
+        0.00907,
+        0.00975,
+        0.01046,
+        0.01141,
+        0.01291,
+        0.01438,
+        0.01559,
+        0.01678,
+        0.01794,
+        0.01937,
+        0.02093,
+        0.02256,
+        0.02439,
+        0.02629,
+        0.02849,
+        0.03112,
+        0.03383,
+        0.03705,
+        0.03962,
+        0.04307,
+        0.04713,
+        0.05090,
+        0.05468,
+        0.05940,
+        0.06524,
+        0.07183,
+        0.07917,
+        0.08707,
+        0.09573,
+        0.10509,
+        0.11405,
+        0.12365,
+        0.13305,
+        0.14272,
+        0.15315,
+        0.16429,
+        0.17683,
+        0.19091,
+        0.20629,
+        0.22148,
+        0.23683,
+        0.25414,
+        0.27072,
+        0.28827,
+        0.30734,
+        1.0000,
+    ]
+    try:
+        probability_of_death = probability_of_death_at_give_age[age]
+    except IndexError:
+        probability_of_death = 1
+    return random.random() < probability_of_death
+
 
 def birth(age, number_of_aces=0, alpha=3):
     """
     This uses data from the UN's department of economic and social affairs
     - <https://population.un.org/wpp/Download/Standard/Fertility/>
-    to return a probability of having a birth at a given age.
+    to return a boolean representing whether or not someone (able to have a
+    birth) has a birth at a given age.
 
     - age: the age
     - number_of_aces: the number of adverse childhood events
