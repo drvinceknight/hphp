@@ -4,7 +4,7 @@ import src
 
 
 def test_number_of_births_in_given_year_for_ages_out_of_data_set():
-    number_of_repetitions = 1_000
+    number_of_repetitions = 5_000
     for age in range(15):
         assert all([src.birth(age=age) is False for _ in range(number_of_repetitions)])
     for age in range(50, 100):
@@ -12,7 +12,7 @@ def test_number_of_births_in_given_year_for_ages_out_of_data_set():
 
 
 def test_number_of_births_in_given_year_for_ages_inside_range_gives_a_birth():
-    number_of_repetitions = 1_000
+    number_of_repetitions = 5_000
     for age in range(15, 50):
         assert any([src.birth(age=age) is True for _ in range(number_of_repetitions)])
 
