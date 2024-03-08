@@ -1,0 +1,4 @@
+matplotlib
+pytest
+sympy
+nbval
