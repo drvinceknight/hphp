@@ -1,4 +1,3 @@
-import random
 import numpy as np
 import src
 
@@ -28,7 +27,7 @@ def test_get_expected_number_of_births_for_specific_25_year_olds():
     expected_value = 134.492
     births = []
     for seed in range(500):
-        random.seed(seed)
+        np.random.seed(seed)
         number_of_repetitions = 1_000
         births.append(sum(src.birth(age=25) for _ in range(number_of_repetitions)))
     assert expected_value - 1 <= np.mean(births) <= expected_value + 1
@@ -54,13 +53,13 @@ def test_adjustment_for_age():
 
 def test_get_expected_difference_for_15_year_olds():
     """
-    This tests that aces act in the expected way.
+    This tests that aces impact on the number of births in the expected way.
 
     For 15 year olds: the number of births should increase as the number of ACEs
     increases until we get to 5 aces.
     """
     age = 15
-    random.seed(0)
+    np.random.seed(0)
     number_of_repetitions = 1_000
     number_of_aces = 0
     assert (
@@ -68,7 +67,7 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 18
+        == 12
     )
 
     number_of_aces = 1
@@ -77,7 +76,7 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 64
+        == 63
     )
 
     number_of_aces = 2
@@ -86,7 +85,7 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 117
+        == 102
     )
 
     number_of_aces = 3
@@ -95,7 +94,7 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 122
+        == 132
     )
 
     number_of_aces = 4
@@ -104,7 +103,7 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 130
+        == 128
     )
 
     number_of_aces = 5
@@ -113,7 +112,7 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 116
+        == 126
     )
 
     number_of_aces = 6
@@ -122,18 +121,18 @@ def test_get_expected_difference_for_15_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 84
+        == 89
     )
 
 
 def test_get_expected_difference_for_25_year_olds():
     """
-    This tests that aces act in the expected way.
+    This tests that aces impact on births in the expected way.
 
-    For 25 year olds: the number of decreases
+    For 25 year olds: the number of births decreases with the number of aces.
     """
     age = 25
-    random.seed(0)
+    np.random.seed(0)
     number_of_repetitions = 1_000
     number_of_aces = 0
     assert (
@@ -141,7 +140,7 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 148
+        == 139
     )
 
     number_of_aces = 1
@@ -150,7 +149,7 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 124
+        == 137
     )
 
     number_of_aces = 2
@@ -159,7 +158,7 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 112
+        == 100
     )
 
     number_of_aces = 3
@@ -168,7 +167,7 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 69
+        == 77
     )
 
     number_of_aces = 4
@@ -177,7 +176,7 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 52
+        == 58
     )
 
     number_of_aces = 5
@@ -186,7 +185,7 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 30
+        == 36
     )
 
     number_of_aces = 6
@@ -195,20 +194,52 @@ def test_get_expected_difference_for_25_year_olds():
             src.birth(age=age, number_of_aces=number_of_aces)
             for _ in range(number_of_repetitions)
         )
-        == 16
+        == 14
     )
 
 
-def test_number_of_deaths_in_given_year_for_ages_outside_range_gives_a_death():
+def test_number_of_deaths_in_given_year_for_ages_outside_range_gives_a_death_male():
     number_of_repetitions = 100_000
     for age in range(101, 105):
-        assert all([src.death(age=age) is True for _ in range(number_of_repetitions)])
+        assert all(
+            [
+                src.death(age=age, sex="Male") is True
+                for _ in range(number_of_repetitions)
+            ]
+        )
 
 
-def test_number_of_deaths_in_given_year_for_ages_inside_range_gives_a_death():
+def test_number_of_deaths_in_given_year_for_ages_outside_range_gives_a_death_female():
+    number_of_repetitions = 100_000
+    for age in range(101, 105):
+        assert all(
+            [
+                src.death(age=age, sex="Female") is True
+                for _ in range(number_of_repetitions)
+            ]
+        )
+
+
+def test_number_of_deaths_in_given_year_for_ages_inside_range_gives_a_death_male():
     number_of_repetitions = 100_000
     for age in range(101):
-        assert any([src.death(age=age) is True for _ in range(number_of_repetitions)])
+        assert any(
+            [
+                src.death(age=age, sex="Male") is True
+                for _ in range(number_of_repetitions)
+            ]
+        )
+
+
+def test_number_of_deaths_in_given_year_for_ages_inside_range_gives_a_death_female():
+    number_of_repetitions = 100_000
+    for age in range(101):
+        assert any(
+            [
+                src.death(age=age, sex="Female") is True
+                for _ in range(number_of_repetitions)
+            ]
+        )
 
 
 def test_get_expected_number_of_deaths_for_specific_25_year_olds():
@@ -220,60 +251,274 @@ def test_get_expected_number_of_deaths_for_specific_25_year_olds():
     This is a wide ranging test that repeats the exercise 500 times and confirms an
     expectation.
     """
-    expected_value = 152.4
+    expected_value = 3.068
     births = []
-    for seed in range(500):
-        random.seed(seed)
-        number_of_repetitions = 94_205
-        births.append(sum(src.death(age=25) for _ in range(number_of_repetitions)))
-    assert expected_value - 1 <= np.mean(births) <= expected_value + 1
+    for sex in ("Male", "Female"):
+        for seed in range(500):
+            np.random.seed(seed)
+            number_of_repetitions = 1_000
+            births.append(
+                sum(src.death(age=25, sex=sex) for _ in range(number_of_repetitions))
+            )
+        assert expected_value - 1 <= np.mean(births) <= expected_value + 1
 
 
 def test_get_expected_number_of_deaths_for_specific_50_year_olds():
-    """
-    From the data we have that 87_655 individuals are expected to survive to 50.
-
-    Of those, 522.5 are expected to die.
-
-    This is a wide ranging test that repeats the exercise 500 times and confirms an
-    expectation.
-    """
-    expected_value = 522.5
+    expected_values = (9.884, 8.025)
     births = []
-    for seed in range(500):
-        random.seed(seed)
-        number_of_repetitions = 87_655
-        births.append(sum(src.death(age=50) for _ in range(number_of_repetitions)))
-    assert expected_value - 1 <= np.mean(births) <= expected_value + 1
+    for expected_value, sex in zip(expected_values, ("Male", "Female")):
+        for seed in range(500):
+            np.random.seed(seed)
+            number_of_repetitions = 1_000
+            births.append(
+                sum(src.death(age=50, sex=sex) for _ in range(number_of_repetitions))
+            )
+        assert (
+            expected_value - 1 <= np.mean(births) <= expected_value + 1
+        ), f"Failed for {expected_value}, {sex}"
 
 
 def test_get_expected_number_of_deaths_for_specific_99_year_olds():
-    """
-    From the data we have that 1_269 individuals are expected to survive to 99.
-
-    Of those, 390.1 are expected to die.
-
-    This is a wide ranging test that repeats the exercise 500 times and confirms an
-    expectation.
-    """
-    expected_value = 390.1
+    expected_values = (372.892, 356.631)
     births = []
-    for seed in range(500):
-        random.seed(seed)
-        number_of_repetitions = 1_269
-        births.append(sum(src.death(age=99) for _ in range(number_of_repetitions)))
-    assert expected_value - 1 <= np.mean(births) <= expected_value + 1
+    for expected_value, sex in zip(expected_values, ("Male", "Female")):
+        for seed in range(500):
+            np.random.seed(seed)
+            number_of_repetitions = 1_000
+            births.append(
+                sum(src.death(age=99, sex=sex) for _ in range(number_of_repetitions))
+            )
+        assert (
+            expected_value - 1 <= np.mean(births) <= expected_value + 1
+        ), f"Failed for {expected_value}, {sex}"
 
 
 def test_get_expected_number_of_deaths_for_specific_100_year_olds():
-    """
-    All 100 year olds die (although the data set isn't completely clear here
-    except for the probability of death being 1)
-    """
     expected_value = 879
     births = []
-    for seed in range(500):
-        random.seed(seed)
-        number_of_repetitions = expected_value
-        births.append(sum(src.death(age=100) for _ in range(number_of_repetitions)))
-    assert expected_value - 1 <= np.mean(births) <= expected_value + 1
+    for sex in ("Male", "Female"):
+        for seed in range(500):
+            np.random.seed(seed)
+            number_of_repetitions = expected_value
+            births.append(
+                sum(src.death(age=100, sex=sex) for _ in range(number_of_repetitions))
+            )
+        assert expected_value - 1 <= np.mean(births) <= expected_value + 1
+
+
+def test_sample_number_of_aces_for_total_group():
+    repetitions = 10_000
+    np.random.seed(0)
+    number_of_aces_for_total_group = [
+        src.sample_number_of_aces(sex="Total") for _ in range(repetitions)
+    ]
+    expected_mean = 1.3451
+    expected_std = 1.533820716381155
+    expected_max = 8
+    expected_min = 0
+    mean = np.mean(number_of_aces_for_total_group)
+    std = np.std(number_of_aces_for_total_group)
+    max = np.max(number_of_aces_for_total_group)
+    min = np.min(number_of_aces_for_total_group)
+    assert np.isclose(expected_mean, mean)
+    assert np.isclose(expected_std, std)
+    assert np.isclose(expected_max, max)
+    assert np.isclose(expected_min, min)
+
+
+def test_number_of_aces_for_male_group():
+    repetitions = 10_000
+    np.random.seed(0)
+    number_of_aces_for_total_group = [
+        src.sample_number_of_aces(sex="Male") for _ in range(repetitions)
+    ]
+    expected_mean = 1.218
+    expected_std = 1.4172071125985786
+    expected_max = 8
+    expected_min = 0
+    mean = np.mean(number_of_aces_for_total_group)
+    std = np.std(number_of_aces_for_total_group)
+    max = np.max(number_of_aces_for_total_group)
+    min = np.min(number_of_aces_for_total_group)
+    assert np.isclose(expected_mean, mean)
+    assert np.isclose(expected_std, std)
+    assert np.isclose(expected_max, max)
+    assert np.isclose(expected_min, min)
+
+
+def test_number_of_aces_for_female_group():
+    repetitions = 10_000
+    np.random.seed(0)
+    number_of_aces_for_total_group = [
+        src.sample_number_of_aces(sex="Female") for _ in range(repetitions)
+    ]
+    expected_mean = 1.4829
+    expected_std = 1.6409471624644105
+    expected_max = 8
+    expected_min = 0
+    mean = np.mean(number_of_aces_for_total_group)
+    std = np.std(number_of_aces_for_total_group)
+    max = np.max(number_of_aces_for_total_group)
+    min = np.min(number_of_aces_for_total_group)
+    assert np.isclose(expected_mean, mean)
+    assert np.isclose(expected_std, std)
+    assert np.isclose(expected_max, max)
+    assert np.isclose(expected_min, min)
+
+
+def test_individual():
+    individual = src.Individual(sex="Male", age=21, number_of_aces=3)
+    assert individual.sex == "Male"
+    assert individual.age == 21
+    assert individual.number_of_aces == 3
+
+
+def test_uk_population_pyramid():
+    repetitions = 10_000
+    np.random.seed(0)
+    ages = []
+    number_of_male = 0
+    for _ in range(repetitions):
+        age, sex = src.uk_population_pyramid()
+        ages.append(age)
+        number_of_male += sex == "Male"
+    expected_mean = 41.0012
+    expected_std = 23.66099741261978
+    expected_max = 100
+    expected_min = 0
+    mean = np.mean(ages)
+    std = np.std(ages)
+    max = np.max(ages)
+    min = np.min(ages)
+    assert np.isclose(expected_mean, mean)
+    assert np.isclose(expected_std, std)
+    assert np.isclose(expected_max, max)
+    assert np.isclose(expected_min, min)
+    male_to_female_ratio = number_of_male / (repetitions - number_of_male)
+    expected_male_to_female_ratio = (0.9657951641438962,)
+    assert np.isclose(male_to_female_ratio, expected_male_to_female_ratio)
+
+
+def test_get_population_with_uk_pyramid_population():
+    number_of_individuals = 10_000
+    population = src.get_population(
+        number_of_individuals=number_of_individuals,
+        population_pyramid=src.uk_population_pyramid,
+        seed=0,
+    )
+    assert len(population) == number_of_individuals
+    ages = []
+    number_of_male = 0
+    for individual in population:
+        ages.append(individual.age)
+        number_of_male += individual.sex == "Male"
+    expected_mean = 41.1292
+    expected_std = 23.736172972069443
+    expected_max = 100
+    expected_min = 0
+    mean = np.mean(ages)
+    std = np.std(ages)
+    max = np.max(ages)
+    min = np.min(ages)
+
+    assert np.isclose(expected_mean, mean)
+    assert np.isclose(expected_std, std)
+    assert np.isclose(expected_max, max)
+    assert np.isclose(expected_min, min)
+
+    male_to_female_ratio = number_of_male / (number_of_individuals - number_of_male)
+    expected_male_to_female_ratio = 0.9860973187686196
+    assert np.isclose(male_to_female_ratio, expected_male_to_female_ratio)
+
+
+def test_sample_intergenerational_number_of_aces():
+    numbers_of_maternal_aces = range(9)
+    expected_mean_number_of_aces = (
+        1.248,
+        1.64,
+        2.053,
+        1.893,
+        2.383,
+        2.456,
+        2.39,
+        2.482,
+    )
+    repetitions = 1_000
+    np.random.seed(0)
+    for number_of_maternal_aces, expected_mean in zip(
+        numbers_of_maternal_aces, expected_mean_number_of_aces
+    ):
+        assert np.isclose(
+            expected_mean,
+            np.mean(
+                [
+                    src.sample_intergenerational_number_of_aces(
+                        number_of_maternal_aces=number_of_maternal_aces
+                    )
+                    for _ in range(repetitions)
+                ]
+            ),
+        )
+
+
+def test_adjust_aces_with_no_probability():
+    probability_of_heal = 0
+    probability_of_trauma = 0
+    repetitions = 100
+    for _ in range(repetitions):
+        individual = src.Individual(
+            sex="Male", age=np.random.randint(0, 100), number_of_aces=3
+        )
+        delta = src.adjust_aces(
+            individual,
+            probability_of_heal=probability_of_heal,
+            probability_of_trauma=probability_of_trauma,
+        )
+        assert delta == 0
+
+
+def test_adjust_aces_for_children():
+    probability_of_heal = 0
+    probability_of_trauma = 0
+    repetitions = 100
+    for _ in range(repetitions):
+        individual = src.Individual(
+            sex="Male", age=np.random.randint(0, 18), number_of_aces=3
+        )
+        delta = src.adjust_aces(
+            individual,
+            probability_of_heal=probability_of_heal,
+            probability_of_trauma=probability_of_trauma,
+        )
+        assert 1 >= delta >= 0
+
+
+def test_adjust_aces_for_adults():
+    probability_of_heal = 0
+    probability_of_trauma = 0
+    repetitions = 100
+    for _ in range(repetitions):
+        individual = src.Individual(
+            sex="Male", age=np.random.randint(18, 100), number_of_aces=3
+        )
+        delta = src.adjust_aces(
+            individual,
+            probability_of_heal=probability_of_heal,
+            probability_of_trauma=probability_of_trauma,
+        )
+        assert -1 <= delta <= 0
+
+
+def test_get_initial_population():
+    number_of_initial_individuals = 100
+    seed = 0
+    initial_population = src.get_population(
+        number_of_individuals=number_of_initial_individuals,
+        population_pyramid=src.uk_population_pyramid,
+        seed=seed,
+    )
+    assert len(initial_population) == number_of_initial_individuals
+    for individual in initial_population:
+        assert individual.sex in ("Male", "Female")
+        assert 0 <= individual.age <= 100
+        assert 0 <= individual.number_of_aces <= 8

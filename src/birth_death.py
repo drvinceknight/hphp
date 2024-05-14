@@ -1,123 +1,229 @@
-import random
+import numpy as np
 
-def death(age):
+
+def death(age, sex):
     """
     This uses data from the UN's department of economic and social affairs
     https://population.un.org/wpp/Download/Standard/Mortality/
     to return a boolean representing whether or not someone has a death at a
     given age.
 
-    Life Tables - Abridged
+    Life Tables - Based on 1985.
 
     """
-    probability_of_death_at_give_age = [
-        0.02793,
-        0.00351,
-        0.00244,
-        0.00193,
-        0.00160,
-        0.00137,
-        0.00118,
-        0.00101,
-        0.00087,
-        0.00076,
-        0.00069,
-        0.00066,
-        0.00065,
-        0.00069,
-        0.00077,
-        0.00088,
-        0.00100,
-        0.00113,
-        0.00125,
-        0.00135,
-        0.00142,
-        0.00148,
-        0.00153,
-        0.00156,
-        0.00159,
-        0.00162,
-        0.00165,
-        0.00168,
-        0.00172,
-        0.00177,
-        0.00180,
-        0.00185,
-        0.00194,
-        0.00202,
-        0.00212,
-        0.00225,
-        0.00239,
-        0.00254,
-        0.00268,
-        0.00283,
-        0.00303,
-        0.00323,
-        0.00345,
-        0.00368,
-        0.00391,
-        0.00415,
-        0.00441,
-        0.00470,
-        0.00506,
-        0.00548,
-        0.00596,
-        0.00651,
-        0.00711,
-        0.00777,
-        0.00847,
-        0.00907,
-        0.00975,
-        0.01046,
-        0.01141,
-        0.01291,
-        0.01438,
-        0.01559,
-        0.01678,
-        0.01794,
-        0.01937,
-        0.02093,
-        0.02256,
-        0.02439,
-        0.02629,
-        0.02849,
-        0.03112,
-        0.03383,
-        0.03705,
-        0.03962,
-        0.04307,
-        0.04713,
-        0.05090,
-        0.05468,
-        0.05940,
-        0.06524,
-        0.07183,
-        0.07917,
-        0.08707,
-        0.09573,
-        0.10509,
-        0.11405,
-        0.12365,
-        0.13305,
-        0.14272,
-        0.15315,
-        0.16429,
-        0.17683,
-        0.19091,
-        0.20629,
-        0.22148,
-        0.23683,
-        0.25414,
-        0.27072,
-        0.28827,
-        0.30734,
-        1.0000,
-    ]
+    if sex == "Male":
+        probability_of_death_at_give_age = [
+            0.07446,
+            0.01592,
+            0.00925,
+            0.00641,
+            0.00485,
+            0.00377,
+            0.00299,
+            0.00241,
+            0.00199,
+            0.00172,
+            0.00157,
+            0.00150,
+            0.00150,
+            0.00153,
+            0.00161,
+            0.00173,
+            0.00189,
+            0.00209,
+            0.00230,
+            0.00248,
+            0.00265,
+            0.00279,
+            0.00290,
+            0.00303,
+            0.00311,
+            0.00312,
+            0.00310,
+            0.00309,
+            0.00313,
+            0.00317,
+            0.00326,
+            0.00334,
+            0.00345,
+            0.00356,
+            0.00368,
+            0.00385,
+            0.00400,
+            0.00407,
+            0.00433,
+            0.00455,
+            0.00488,
+            0.00516,
+            0.00550,
+            0.00596,
+            0.00634,
+            0.00686,
+            0.00736,
+            0.00785,
+            0.00848,
+            0.00909,
+            0.00992,
+            0.01064,
+            0.01154,
+            0.01240,
+            0.01327,
+            0.01428,
+            0.01534,
+            0.01660,
+            0.01805,
+            0.01963,
+            0.02168,
+            0.02369,
+            0.02580,
+            0.02821,
+            0.03048,
+            0.03334,
+            0.03566,
+            0.03874,
+            0.04193,
+            0.04536,
+            0.04968,
+            0.05367,
+            0.05856,
+            0.06368,
+            0.06924,
+            0.07541,
+            0.08165,
+            0.08858,
+            0.09608,
+            0.10417,
+            0.11372,
+            0.12342,
+            0.13357,
+            0.14442,
+            0.15646,
+            0.16863,
+            0.17992,
+            0.19350,
+            0.20749,
+            0.22131,
+            0.23581,
+            0.25014,
+            0.26705,
+            0.28080,
+            0.29747,
+            0.31033,
+            0.32555,
+            0.34112,
+            0.35664,
+            0.37224,
+            1.0000,
+        ]
+    else:
+        probability_of_death_at_give_age = [
+            0.07033,
+            0.01503,
+            0.00883,
+            0.00630,
+            0.00494,
+            0.00393,
+            0.00312,
+            0.00246,
+            0.00194,
+            0.00159,
+            0.00141,
+            0.00132,
+            0.00130,
+            0.00131,
+            0.00137,
+            0.00145,
+            0.00155,
+            0.00166,
+            0.00177,
+            0.00183,
+            0.00188,
+            0.00192,
+            0.00197,
+            0.00205,
+            0.00211,
+            0.00214,
+            0.00216,
+            0.00217,
+            0.00222,
+            0.00226,
+            0.00231,
+            0.00236,
+            0.00242,
+            0.00247,
+            0.00254,
+            0.00264,
+            0.00280,
+            0.00288,
+            0.00306,
+            0.00326,
+            0.00346,
+            0.00360,
+            0.00376,
+            0.00393,
+            0.00409,
+            0.00433,
+            0.00459,
+            0.00488,
+            0.00530,
+            0.00571,
+            0.00622,
+            0.00670,
+            0.00720,
+            0.00766,
+            0.00811,
+            0.00865,
+            0.00927,
+            0.01002,
+            0.01096,
+            0.01199,
+            0.01329,
+            0.01457,
+            0.01605,
+            0.01767,
+            0.01921,
+            0.02124,
+            0.02314,
+            0.02537,
+            0.02758,
+            0.02976,
+            0.03265,
+            0.03525,
+            0.03877,
+            0.04252,
+            0.04665,
+            0.05145,
+            0.05614,
+            0.06161,
+            0.06740,
+            0.07378,
+            0.08176,
+            0.08972,
+            0.09839,
+            0.10751,
+            0.11900,
+            0.13060,
+            0.14029,
+            0.15284,
+            0.16478,
+            0.17836,
+            0.19303,
+            0.20629,
+            0.22322,
+            0.23829,
+            0.25346,
+            0.27026,
+            0.28709,
+            0.30468,
+            0.32225,
+            0.33985,
+            1.0000,
+        ]
     try:
         probability_of_death = probability_of_death_at_give_age[age]
     except IndexError:
         probability_of_death = 1
-    return random.random() < probability_of_death
+    return np.random.random() < probability_of_death
 
 
 def birth(age, number_of_aces=0, alpha=3):
@@ -172,7 +278,7 @@ def birth(age, number_of_aces=0, alpha=3):
     }
     probability = overall_probability_of_a_birth_at_given_age.get(age, 0)
 
-    return random.random() < probability
+    return np.random.random() < probability
 
 
 def adjust_age_for_aces(age, number_of_aces, alpha=3):
@@ -213,3 +319,151 @@ def adjust_age_for_aces(age, number_of_aces, alpha=3):
     This is very approximate but suggests modifying the probability in that way.
     """
     return age + alpha * number_of_aces
+
+
+def sample_number_of_aces(sex):
+    """
+    This uses data from
+
+    "Prevalence of adverse childhood experiences among individuals aged 45 to 85 years: a cross-sectional analysis of
+    the Canadian Longitudinal Study on Aging"
+
+    The table is from the supplementary material:
+
+    # ACEs | Total | Male   | Female |
+    ----------------------------------
+        0  | 38.4  | 40.6   | 36.3   |
+    ----------------------------------
+        1  | 26.0  | 26.8   | 25.2   |
+    ----------------------------------
+        2  | 15.5  | 15.3   | 15.7   |
+    ----------------------------------
+        3  | 9.4   | 9.2    | 9.6    |
+    ----------------------------------
+        4  | 5.6   | 4.6    | 6.6    |
+    ----------------------------------
+        5  | 3.0   | 2.2    | 3.9    |
+    ----------------------------------
+        6  | 1.5   | 1.1    | 1.9    |
+    ----------------------------------
+        7  | 0.5   | 0.2    | 0.8    |
+    ----------------------------------
+        8  | 0.1   | 0.1    | 0.2    |
+    ----------------------------------
+
+    group: One of "Total", "Male" or "Female"
+    """
+    ace_data = {
+        0: {"Total": 38.4, "Male": 40.6, "Female": 36.3},
+        1: {"Total": 26.0, "Male": 26.8, "Female": 25.2},
+        2: {"Total": 15.5, "Male": 15.3, "Female": 15.7},
+        3: {"Total": 9.4, "Male": 9.2, "Female": 9.6},
+        4: {"Total": 5.6, "Male": 4.6, "Female": 6.6},
+        5: {"Total": 3.0, "Male": 2.2, "Female": 3.9},
+        6: {"Total": 1.5, "Male": 1.1, "Female": 1.9},
+        7: {"Total": 0.5, "Male": 0.2, "Female": 0.8},
+        8: {"Total": 0.1, "Male": 0.1, "Female": 0.2},
+    }
+    aces_range = range(9)
+    p = np.array([ace_data[number][sex] for number in aces_range])
+    p = p / p.sum()
+    return np.random.choice(a=aces_range, p=p)
+
+
+def sample_intergenerational_number_of_aces(number_of_maternal_aces):
+    """
+    This samples the number of aces of a child based on the number of aces from
+    a mother.
+
+    This is based on this table from: "Intergenerational Associations between
+    Parents’ and Children’s Adverse Childhood Experience Scores"
+
+    Which contains this table (Table 3):
+
+    Number of Mother   ACES  0                 1                 2-3               4+
+    probability of 0   ACES  42.6% (38.4-46.7) 37.8% (32.4-46.7) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
+    probability of 1   ACES  25.8% (21.9-29.6) 29.7% (23.9-35.5) 28.4% (22.2-34.7) 23.2% (14.1-32.2)
+    probability of 2-3 ACES  25.8% (21.9-29.7) 21.5% (16.3-26.7) 21.3% (15.7-26.8) 23.8% (15.6-32.0)
+    probability of 4+  ACES  5.8% (4.0-7.7)    11.0% (6.3-15.6)  19.9% (13.7-26.1) 27.9% (18.9-36.9)
+    """
+    if number_of_maternal_aces == 0:
+        p = np.array(
+            (
+                0.426,
+                0.258,
+                0.258 / 2,
+                0.258 / 2,
+                0.058 / 5,
+                0.058 / 5,
+                0.058 / 5,
+                0.058 / 5,
+                0.058 / 5,
+            )
+        )
+    if number_of_maternal_aces == 1:
+        p = np.array(
+            (
+                0.378,
+                0.297,
+                0.215 / 2,
+                0.215 / 2,
+                0.11 / 5,
+                0.11 / 5,
+                0.11 / 5,
+                0.11 / 5,
+                0.11 / 5,
+            )
+        )
+    if number_of_maternal_aces in (2, 3):
+        p = np.array(
+            (
+                0.304,
+                0.284,
+                0.213 / 2,
+                0.213 / 2,
+                0.199 / 5,
+                0.199 / 5,
+                0.199 / 5,
+                0.199 / 5,
+                0.199 / 5,
+            )
+        )
+    if number_of_maternal_aces >= 4:
+        p = np.array(
+            (
+                0.251,
+                0.232,
+                0.238 / 2,
+                0.238 / 2,
+                0.279 / 5,
+                0.279 / 5,
+                0.279 / 5,
+                0.279 / 5,
+                0.279 / 5,
+            )
+        )
+    aces_range = range(9)
+    p = p / p.sum()
+    return np.random.choice(a=aces_range, p=p)
+
+
+def adjust_aces(individual, probability_of_heal, probability_of_trauma):
+    """
+    Return the delta of the number of aces
+
+    - A child (less than 18) can gain another ace from an external factor.
+    - An adult (18 or more) can reduce their number of aces by 1.
+
+    There is some research to justify this second aspect for example:
+
+    "The Association Between Parent and Child ACEs is Buffered by
+    Forgiveness of Others and Self-Forgiveness"
+    Journal of Child & Adolescent Trauma (2023) 16:995–1003
+
+    Which talks about "self forgiveness"
+    """
+    if (individual.age < 18) and (np.random.random() < probability_of_trauma):
+        return min(8, individual.number_of_aces + 1) - individual.number_of_aces
+    if np.random.random() < probability_of_heal:
+        return max(0, individual.number_of_aces - 1) - individual.number_of_aces
+    return 0
