@@ -1,7 +1,122 @@
 \documentclass{article}
 
+\usepackage[margin=1.5cm, includefoot, footskip=30pt]{geometry}
+\usepackage{amsmath}
+
+\title{Hurt People Hurt People}
+\author{M Harper and V Knight}
+\date{\today}
+
 \begin{document}
 
-Paper goes here. 
+\maketitle
 
+\abstract{
+    This paper presents a model of transgenerational trauma.
+}
+
+\section{Introduction}
+
+\begin{itemize}
+    \item \cite{williams2019adverse}: paper showing the relationship between age
+        of first child and the number of ACEs.
+    \item \cite{joshi2021prevalence}: paper showing the prevalence of ACEs in
+        the population.
+    \item \cite{schickedanz2021intergenerational}: paper showing transmission
+        rate of ACEs.
+    \item \cite{skolnick2023association}: paper showing the possibility of
+        healing.
+    \item \cite{grummitt2024burden}: paper showing `Childhood maltreatment responsible for up to 40
+        percent of mental health conditions'.
+\end{itemize}
+
+\section{Methods}
+
+\subsection{Analytical Model}
+
+Finite difference replicator-mutator equation
+
+\begin{itemize}
+    \item $x_T$: proportion of population that is traumatised.
+    \item $x_S$: proportion of population that is not traumatised.
+    \item $p$: probability of non traumatised people becoming traumatised.
+    \item $q$: probability of healing.
+    \item $f_T$: the fitness of a traumatised individual $f_T=\alpha f_S$ where $\alpha > 1$
+    \item $f_S$: the fitness of a non traumatised individual
+    \item $\bar f$: the average fitness $\bar f=x_T f_T + x_S f_S$
+\end{itemize}
+
+The equation:
+
+
+$$x_i'=\sum_{j\in\{T, S\}}\frac{x_jf_jQ_{ji}}{\bar f}\text{ for }i\in\{T,S\}$$
+
+equivalently:
+
+$$x_{j}^{(t + 1)}=\sum_{j\in\{T, S\}}\frac{x_j^{(t)}f_jQ_{ji}}{\bar f}\text{ for }i\in\{T,S\}$$
+
+we have:
+
+$$
+Q = 
+\begin{pmatrix}
+    1 - q & q\\
+    p     & 1 - p
+\end{pmatrix}
+$$
+
+
+which gives:
+
+
+$$x_T'=\frac{x_Tf_T(1 - q) + x_Sf_Tp}{\bar f}$$
+
+
+\subsubsection{Self sustaining proportion of trauma when $Q_T = x_T' / x_T \geq 1$}
+
+$$
+\begin{aligned}
+Q_T =  \frac{x_T'}{x_T} & = \frac{1}{x_T}\frac{x_T\alpha f_S(1 - q) + (1 - x_T)f_Sp}{x_T \alpha f_S + (1 -x_T) f_S}\\
+                        & = \frac{1}{x_T}\frac{x_T\alpha (1 - q) + p - x_Tp}{x_T \alpha  + (1 -x_T) }\\
+                        & = \frac{1}{x_T}\frac{x_T(\alpha(1 - q) - p) + p}{x_T (\alpha - 1) + 1 }\\
+\end{aligned}
+$$
+
+If $p = q = 0$:
+
+$$
+\begin{aligned}
+Q_T = \frac{\alpha}{x_T (\alpha - 1) + 1 }\\
+\end{aligned}
+$$
+
+which is $\geq 1$ when $\alpha \geq 1$ because: $x_T(\alpha - 1) + 1 - \alpha = (x_T - 1)(\alpha - 1) < 0$.
+
+Other interesting cases to show algebraically:
+
+\begin{itemize}
+    \item If $p = \beta q$:
+        \begin{itemize}
+            \item $\alpha > 1$, $\beta > 1$: we expect $Q_T > 1$ (fitness advantage and in flow)
+            \item $\alpha > 1$, $\beta < 1$: we expect a condition on $Q_T$ (fitness advantage but out flow)
+            \item $\alpha < 1$, $\beta < 1$: we expect $Q_T < 1$ (fitness disadvantage and out flow due to healing) -- this strays from premis of fitness advantage
+            \item $\alpha < 1$, $\beta > 1$: we expect a condition on $Q_T$ (fitness disadvantage and in flow)  -- this strays from premis of fitness advantage
+        \end{itemize}
+    \item If $p=0$ and $q>0$:
+        \begin{itemize}
+            \item If $\alpha=1$ $x_T\to 0$
+            \item If $\alpha>1$ $x_T \to \epsilon$ depending on some relationship between $\alpha$ and $q$.
+        \end{itemize}
+    \item If $p>0$ then $x_T > 0$.
+    \item Some sort of family of approximation results based on things like $\beta$ is close to 1 ($\beta = 1 + \epsilon$ etc...).
+\end{itemize}
+
+\subsection{Agent Based Model}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+\bibliographystyle{plain}
+\bibliography{bibliography.bib}
 \end{document}
