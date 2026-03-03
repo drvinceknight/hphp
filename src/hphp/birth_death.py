@@ -226,19 +226,41 @@ def death(age, sex):
     return np.random.random() < probability_of_death
 
 
-def birth(age, number_of_aces=0, alpha=3):
+def birth(age, number_of_aces=0, alpha=1.0, tempo_years_per_ace=3):
     """
     This uses data from the UN's department of economic and social affairs
     - <https://population.un.org/wpp/Download/Standard/Fertility/>
     to return a boolean representing whether or not someone (able to have a
     birth) has a birth at a given age.
 
-    - age: the age
-    - number_of_aces: the number of adverse childhood events
-    - alpha: an adjustment for the number of adverse childhood events (this is
-      described in more detail in the adjust_age_for_aces docstring)
+    Parameters
+    ----------
+    age : int
+        The biological age.
+    number_of_aces : int
+        Number of adverse childhood experiences.
+    alpha : float
+        Multiplicative fertility factor (replicator-style fitness multiplier).
+        Under a coarse-grained two-type model (ACE=0 vs ACE>=1), this corresponds
+        directly to the analytical parameter via f_T = alpha * f_S.
+    tempo_years_per_ace : int
+        Number of years by which reproduction is shifted earlier per ACE.
+        This implements the empirical claim that ACE exposure is associated
+        with earlier age at first birth (a tempo effect).
+
+    We separate two mechanisms:
+
+      (1) Tempo: earlier reproductive timing.
+      (2) Quantum: multiplicative increase in fertility intensity.
     """
-    age = adjust_age_for_aces(age=age, number_of_aces=number_of_aces, alpha=alpha)
+
+    # ---- Tempo effect (earlier reproduction) ----
+    age = adjust_age_for_aces(
+        age=age,
+        number_of_aces=number_of_aces,
+        tempo_years_per_ace=tempo_years_per_ace,
+    )
+
     overall_probability_of_a_birth_at_given_age = {
         15: 0.013355,
         16: 0.025160000000000002,
@@ -276,12 +298,18 @@ def birth(age, number_of_aces=0, alpha=3):
         48: 0.0025670000000000003,
         49: 0.0017,
     }
-    probability = overall_probability_of_a_birth_at_given_age.get(age, 0)
+
+    probability = overall_probability_of_a_birth_at_given_age.get(age, 0.0)
+
+    # ---- Quantum effect (replicator-style multiplier) ----
+    # Minimal two-type interpretation: traumatised if ACE >= 1
+    if number_of_aces >= 1:
+        probability = min(1.0, alpha * probability)
 
     return np.random.random() < probability
 
 
-def adjust_age_for_aces(age, number_of_aces, alpha=3):
+def adjust_age_for_aces(age, number_of_aces, tempo_years_per_ace=3):
     """
     This adjusts the probability based on the number of aces.
 
@@ -309,16 +337,14 @@ def adjust_age_for_aces(age, number_of_aces, alpha=3):
     is equivalent to the effect of being born to a mother approximately three
     year younger.
 
-    Whilst not directly and without further specific study this suggests the
-    following adjustment:
+    We approximate this by shifting the fertility schedule earlier:
 
-    p(age) = p(age + alpha * number_of_aces)
+        p(age) = p(age - tempo_years_per_ace * number_of_aces)
 
-    Where alpha is an adjustment that is set to 3.
-
-    This is very approximate but suggests modifying the probability in that way.
+    This captures a life-history timing (tempo) effect without
+    assuming higher completed fertility.
     """
-    return age + alpha * number_of_aces
+    return age - tempo_years_per_ace * number_of_aces
 
 
 def sample_number_of_aces(sex):

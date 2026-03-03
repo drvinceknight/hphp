@@ -15,33 +15,70 @@ def simulate(
     number_of_years,
     initial_population,
     probability_of_male_birth,
-    alpha=3,
+    alpha=1.1,
+    tempo_years_per_ace=3,
     seed=None,
     probability_of_heal=0,
     probability_of_trauma=0,
 ):
     """
-    Simulate a population of individuals through which intergenerational trauma
-    is passed on.
+    Simulate an age-structured population in which adverse childhood
+    experiences (ACEs) influence fertility through both timing (tempo)
+    and intensity (quantum) effects.
+
+    The model separates two mechanisms:
+
+        1. Tempo effect:
+           Individuals with higher ACE exposure reproduce earlier.
+           This is implemented by shifting the fertility schedule younger
+           by `tempo_years_per_ace` years per ACE.
+
+        2. Quantum effect:
+           Conditional on age, individuals with ACE exposure have a
+           multiplicative increase in fertility intensity controlled by
+           `alpha`. Under a coarse-grained two-type approximation
+           (ACE = 0 vs ACE >= 1), this corresponds directly to the
+           replicator-style relative fitness parameter via:
+
+               f_T = alpha * f_S
+
+           where f_T and f_S are expected per-capita birth rates of
+           traumatised and non-traumatised individuals respectively.
 
     Parameters
     ----------
-    number_of_years: int
-        Number of years to simulate
-    initial_population: iterable
-        A collection of Individuals
-    probability_of_male_birth: float
-        The probability of any given birth being Male (this is usually more than
-        1/2)
-    alpha: int
-        An adjustment passed to the probability of giving birth based on the
-        number of aces of the mother.
-    seed: int
-        The random seed.
-    probability_of_heal: float
-        The probability of decreasing the number of aces by one.
-    probability_of_external_childhood_trauma: float
-        The probability of a new traumatic event in childhood
+    number_of_years : int
+        Number of years to simulate.
+
+    initial_population : iterable of Individual
+        Initial population state.
+
+    probability_of_male_birth : float
+        Probability that a newborn is male.
+
+    alpha : float, default=1.1
+        Multiplicative fertility factor (quantum effect). Values greater
+        than 1 imply higher reproductive intensity for ACE-exposed
+        individuals.
+
+    tempo_years_per_ace : int, default=3
+        Number of years by which reproduction is shifted earlier per ACE
+        (tempo effect), motivated by empirical associations between ACE
+        exposure and earlier age at first birth.
+
+    seed : int or None
+        Random seed for reproducibility.
+
+    probability_of_heal : float
+        Annual probability that an adult reduces their ACE count by one.
+
+    probability_of_trauma : float
+        Annual probability that a child experiences an additional ACE.
+
+    Returns
+    -------
+    populations : list of lists
+        A history of the population at each year.
     """
     np.random.seed(seed)
     populations = [initial_population]
@@ -56,6 +93,7 @@ def simulate(
                     age=individual.age,
                     number_of_aces=individual.number_of_aces,
                     alpha=alpha,
+                    tempo_years_per_ace=tempo_years_per_ace,
                 )
                 is True
             ):
