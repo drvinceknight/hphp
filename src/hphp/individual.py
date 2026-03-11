@@ -1,4 +1,7 @@
-from collections import namedtuple
+from typing import NamedTuple
 
 
-Individual = namedtuple("Individual", ("sex", "age", "number_of_aces"))
+class Individual(NamedTuple):
+    sex: str
+    age: int
+    number_of_aces: int

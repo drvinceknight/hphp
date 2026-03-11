@@ -1,0 +1,102 @@
+schema: '2.0'
+stages:
+  figure_2:
+    cmd: uv run python tex/figures/figure_2/main.py
+    deps:
+    - path: src/hphp/analytical.py
+      hash: md5
+      md5: 5d80274c83ac35ec18421294533ce549
+      size: 2561
+    - path: tex/figures/figure_2/main.py
+      hash: md5
+      md5: 6062a64d03924f46b0e0f49f00f22368
+      size: 8417
+    outs:
+    - path: tex/figures/figure_2/main.pdf
+      hash: md5
+      md5: 97610b5cec3a607b502edbbce725af0e
+      size: 283600
+  figure_3:
+    cmd: uv run python tex/figures/figure_3/main.py
+    deps:
+    - path: tex/figures/figure_3/main.py
+      hash: md5
+      md5: 4dcae8f003067bfa46ac66328da5245b
+      size: 18254
+    - path: tex/figures/figure_4/data/raw
+      hash: md5
+      md5: 718a42c80d291712c933c7a30cb993d7.dir
+      size: 5339872228
+      nfiles: 5389
+    outs:
+    - path: tex/figures/figure_3/main.pdf
+      hash: md5
+      md5: 089e056e72cd3a44141c261be6801218
+      size: 98715
+  paper:
+    cmd: cd tex && pdflatex -interaction=nonstopmode main.tex && bibtex main && 
+      pdflatex -interaction=nonstopmode main.tex && pdflatex 
+      -interaction=nonstopmode main.tex
+    deps:
+    - path: tex/bibliography.bib
+      hash: md5
+      md5: d817537e1f7e0d3883de317983a136b3
+      size: 8214
+    - path: tex/figures/figure_1/main.pdf
+      hash: md5
+      md5: 522466c361cf479f813803a93318ed79
+      size: 126944
+    - path: tex/figures/figure_2/main.pdf
+      hash: md5
+      md5: 97610b5cec3a607b502edbbce725af0e
+      size: 283600
+    - path: tex/figures/figure_3/main.pdf
+      hash: md5
+      md5: 089e056e72cd3a44141c261be6801218
+      size: 98715
+    - path: tex/figures/figure_4/main.pdf
+      hash: md5
+      md5: 9e587b5d8bfe9cdbc7603c60238e258c
+      size: 92655
+    - path: tex/figures/figure_4/si.pdf
+      hash: md5
+      md5: 58f42a3188f427715e550a1ad0f3b216
+      size: 95195
+    - path: tex/figures/figure_4/si_threshold.pdf
+      hash: md5
+      md5: b0d0e50af0a25c977248e50880db188f
+      size: 12610
+    - path: tex/main.tex
+      hash: md5
+      md5: f6b8b2cbe5c331c5cb2edd8e3fa5d0c4
+      size: 33053
+    outs:
+    - path: tex/main.pdf
+      hash: md5
+      md5: ad22dfb62b2f78d6d75276c40e429a14
+      size: 1022461
+  figure_4:
+    cmd: uv run python tex/figures/figure_4/main.py
+    deps:
+    - path: tex/figures/figure_4/data/raw
+      hash: md5
+      md5: 718a42c80d291712c933c7a30cb993d7.dir
+      size: 5339872228
+      nfiles: 5389
+    - path: tex/figures/figure_4/main.py
+      hash: md5
+      md5: a17f18c1303be1fa7a127316f9869360
+      size: 18177
+    outs:
+    - path: tex/figures/figure_4/main.pdf
+      hash: md5
+      md5: 9e587b5d8bfe9cdbc7603c60238e258c
+      size: 92655
+    - path: tex/figures/figure_4/si.pdf
+      hash: md5
+      md5: 58f42a3188f427715e550a1ad0f3b216
+      size: 95195
+    - path: tex/figures/figure_4/si_threshold.pdf
+      hash: md5
+      md5: b0d0e50af0a25c977248e50880db188f
+      size: 12610

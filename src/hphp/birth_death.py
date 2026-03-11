@@ -1,12 +1,14 @@
 import numpy as np
+import numpy.typing as npt
+
+from .individual import Individual
 
 
-def death(age, sex):
+def death(age: int, sex: str) -> bool:
     """
     This uses data from the UN's department of economic and social affairs
     https://population.un.org/wpp/Download/Standard/Mortality/
-    to return a boolean representing whether or not someone has a death at a
-    given age.
+    returning True if the individual dies at the given age.
 
     Life Tables - Based on 1985.
 
@@ -223,10 +225,10 @@ def death(age, sex):
         probability_of_death = probability_of_death_at_give_age[age]
     except IndexError:
         probability_of_death = 1
-    return np.random.random() < probability_of_death
+    return bool(np.random.random() < probability_of_death)
 
 
-def birth(age, number_of_aces=0, alpha=1.0, tempo_years_per_ace=3):
+def birth(age: int, number_of_aces: int = 0, alpha: float = 1.0, tempo_years_per_ace: int = 3) -> bool:
     """
     This uses data from the UN's department of economic and social affairs
     - <https://population.un.org/wpp/Download/Standard/Fertility/>
@@ -306,15 +308,15 @@ def birth(age, number_of_aces=0, alpha=1.0, tempo_years_per_ace=3):
     if number_of_aces >= 1:
         probability = min(1.0, alpha * probability)
 
-    return np.random.random() < probability
+    return bool(np.random.random() < probability)
 
 
-def adjust_age_for_aces(age, number_of_aces, tempo_years_per_ace=3):
+def adjust_age_for_aces(age: int, number_of_aces: int, tempo_years_per_ace: int = 3) -> int:
     """
     This adjusts the probability based on the number of aces.
 
     This is an approximation but is based on the first table from
-    'Adverse Childhood Experiences, Early and Nonmarital Fertility, and Women’s Health at Midlife'
+    'Adverse Childhood Experiences, Early and Nonmarital Fertility, and Women's Health at Midlife'
 
     In the first table of that paper the probability of having a first birth in
     a given age group are given relative to the number of aces:
@@ -340,14 +342,11 @@ def adjust_age_for_aces(age, number_of_aces, tempo_years_per_ace=3):
     We approximate this by shifting the fertility schedule earlier:
 
         p(age) = p(age - tempo_years_per_ace * number_of_aces)
-
-    This captures a life-history timing (tempo) effect without
-    assuming higher completed fertility.
     """
     return age - tempo_years_per_ace * number_of_aces
 
 
-def sample_number_of_aces(sex):
+def sample_number_of_aces(sex: str) -> int:
     """
     This uses data from
 
@@ -391,18 +390,18 @@ def sample_number_of_aces(sex):
         8: {"Total": 0.1, "Male": 0.1, "Female": 0.2},
     }
     aces_range = range(9)
-    p = np.array([ace_data[number][sex] for number in aces_range])
+    p: npt.NDArray[np.float64] = np.array([ace_data[number][sex] for number in aces_range])
     p = p / p.sum()
-    return np.random.choice(a=aces_range, p=p)
+    return int(np.random.choice(a=aces_range, p=p))
 
 
-def sample_intergenerational_number_of_aces(number_of_maternal_aces):
+def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int:
     """
     This samples the number of aces of a child based on the number of aces from
     a mother.
 
     This is based on this table from: "Intergenerational Associations between
-    Parents’ and Children’s Adverse Childhood Experience Scores"
+    Parents' and Children's Adverse Childhood Experience Scores"
 
     Which contains this table (Table 3):
 
@@ -412,6 +411,7 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces):
     probability of 2-3 ACES  25.8% (21.9-29.7) 21.5% (16.3-26.7) 21.3% (15.7-26.8) 23.8% (15.6-32.0)
     probability of 4+  ACES  5.8% (4.0-7.7)    11.0% (6.3-15.6)  19.9% (13.7-26.1) 27.9% (18.9-36.9)
     """
+    p: npt.NDArray[np.float64]
     if number_of_maternal_aces == 0:
         p = np.array(
             (
@@ -470,23 +470,18 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces):
         )
     aces_range = range(9)
     p = p / p.sum()
-    return np.random.choice(a=aces_range, p=p)
+    return int(np.random.choice(a=aces_range, p=p))
 
 
-def adjust_aces(individual, probability_of_heal, probability_of_trauma):
+def adjust_aces(individual: Individual, probability_of_heal: float, probability_of_trauma: float) -> int:
     """
     Return the delta of the number of aces
 
     - A child (less than 18) can gain another ace from an external factor.
     - An adult (18 or more) can reduce their number of aces by 1.
 
-    There is some research to justify this second aspect for example:
-
-    "The Association Between Parent and Child ACEs is Buffered by
-    Forgiveness of Others and Self-Forgiveness"
-    Journal of Child & Adolescent Trauma (2023) 16:995–1003
-
-    Which talks about "self forgiveness"
+    See e.g. "The Association Between Parent and Child ACEs is Buffered by
+    Forgiveness of Others and Self-Forgiveness", J Child Adolesc Trauma (2023).
     """
     if (individual.age < 18) and (np.random.random() < probability_of_trauma):
         return min(8, individual.number_of_aces + 1) - individual.number_of_aces

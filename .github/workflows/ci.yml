@@ -43,5 +43,11 @@ jobs:
       - name: Sync environment (project + deps)
         run: uv sync --locked
 
+      - name: Lint with ruff
+        run: uv run ruff check src/
+
+      - name: Type check with ty
+        run: uv run ty check src/
+
       - name: Validate notebooks (pytest + nbval)
         run: uv run pytest -vv --nbval --current-env .
