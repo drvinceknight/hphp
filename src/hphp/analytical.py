@@ -7,7 +7,9 @@ import numpy.typing as npt
 from scipy.optimize import brentq
 
 
-def get_x_T_prime(x_T: float, alpha: float, p: float, q: float, *, clip: bool = True) -> float:
+def get_x_T_prime(
+    x_T: float, alpha: float, p: float, q: float, *, clip: bool = True
+) -> float:
     """One-step map x_T -> x_T'.
 
         x' = (x·α·(1-q) + (1-x)·p) / (1 + x·(α-1))
@@ -18,7 +20,9 @@ def get_x_T_prime(x_T: float, alpha: float, p: float, q: float, *, clip: bool = 
     return float(np.clip(x_prime, 0.0, 1.0)) if clip else x_prime
 
 
-def simulation(x_T: float, alpha: float, p: float, q: float, number_of_iterations: int) -> Iterator[float]:
+def simulation(
+    x_T: float, alpha: float, p: float, q: float, number_of_iterations: int
+) -> Iterator[float]:
     """Yield x_T(t) for t = 0 .. number_of_iterations."""
     yield float(x_T)
     for _ in range(int(number_of_iterations)):

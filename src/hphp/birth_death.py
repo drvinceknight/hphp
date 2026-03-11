@@ -228,7 +228,9 @@ def death(age: int, sex: str) -> bool:
     return bool(np.random.random() < probability_of_death)
 
 
-def birth(age: int, number_of_aces: int = 0, alpha: float = 1.0, tempo_years_per_ace: int = 3) -> bool:
+def birth(
+    age: int, number_of_aces: int = 0, alpha: float = 1.0, tempo_years_per_ace: int = 3
+) -> bool:
     """
     This uses data from the UN's department of economic and social affairs
     - <https://population.un.org/wpp/Download/Standard/Fertility/>
@@ -311,12 +313,15 @@ def birth(age: int, number_of_aces: int = 0, alpha: float = 1.0, tempo_years_per
     return bool(np.random.random() < probability)
 
 
-def adjust_age_for_aces(age: int, number_of_aces: int, tempo_years_per_ace: int = 3) -> int:
+def adjust_age_for_aces(
+    age: int, number_of_aces: int, tempo_years_per_ace: int = 3
+) -> int:
     """
     This adjusts the probability based on the number of aces.
 
     This is an approximation but is based on the first table from
-    'Adverse Childhood Experiences, Early and Nonmarital Fertility, and Women's Health at Midlife'
+    'Adverse Childhood Experiences, Early and Nonmarital Fertility,
+    and Women's Health at Midlife'
 
     In the first table of that paper the probability of having a first birth in
     a given age group are given relative to the number of aces:
@@ -350,8 +355,8 @@ def sample_number_of_aces(sex: str) -> int:
     """
     This uses data from
 
-    "Prevalence of adverse childhood experiences among individuals aged 45 to 85 years: a cross-sectional analysis of
-    the Canadian Longitudinal Study on Aging"
+    "Prevalence of adverse childhood experiences among individuals aged 45 to 85 years:
+    a cross-sectional analysis of the Canadian Longitudinal Study on Aging"
 
     The table is from the supplementary material:
 
@@ -390,7 +395,9 @@ def sample_number_of_aces(sex: str) -> int:
         8: {"Total": 0.1, "Male": 0.1, "Female": 0.2},
     }
     aces_range = range(9)
-    p: npt.NDArray[np.float64] = np.array([ace_data[number][sex] for number in aces_range])
+    p: npt.NDArray[np.float64] = np.array(
+        [ace_data[number][sex] for number in aces_range]
+    )
     p = p / p.sum()
     return int(np.random.choice(a=aces_range, p=p))
 
@@ -405,11 +412,11 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int
 
     Which contains this table (Table 3):
 
-    Number of Mother   ACES  0                 1                 2-3               4+
-    probability of 0   ACES  42.6% (38.4-46.7) 37.8% (32.4-46.7) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
-    probability of 1   ACES  25.8% (21.9-29.6) 29.7% (23.9-35.5) 28.4% (22.2-34.7) 23.2% (14.1-32.2)
-    probability of 2-3 ACES  25.8% (21.9-29.7) 21.5% (16.3-26.7) 21.3% (15.7-26.8) 23.8% (15.6-32.0)
-    probability of 4+  ACES  5.8% (4.0-7.7)    11.0% (6.3-15.6)  19.9% (13.7-26.1) 27.9% (18.9-36.9)
+    Mother ACES: 0                1                2-3              4+
+    Child 0:     42.6% (38.4-46.7) 37.8% (32.4-46.7) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
+    Child 1:     25.8% (21.9-29.6) 29.7% (23.9-35.5) 28.4% (22.2-34.7) 23.2% (14.1-32.2)
+    Child 2-3:   25.8% (21.9-29.7) 21.5% (16.3-26.7) 21.3% (15.7-26.8) 23.8% (15.6-32.0)
+    Child 4+:    5.8% (4.0-7.7)    11.0% (6.3-15.6)  19.9% (13.7-26.1) 27.9% (18.9-36.9)
     """
     p: npt.NDArray[np.float64]
     if number_of_maternal_aces == 0:
@@ -473,7 +480,9 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int
     return int(np.random.choice(a=aces_range, p=p))
 
 
-def adjust_aces(individual: Individual, probability_of_heal: float, probability_of_trauma: float) -> int:
+def adjust_aces(
+    individual: Individual, probability_of_heal: float, probability_of_trauma: float
+) -> int:
     """
     Return the delta of the number of aces
 
