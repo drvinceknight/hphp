@@ -1,53 +1,86 @@
-import numpy as np
-import copy
+from collections.abc import Callable
+from typing import Any
 
-from .individual import Individual
+import numpy as np
+
 from .birth_death import (
-    sample_number_of_aces,
-    sample_intergenerational_number_of_aces,
-    death,
-    birth,
     adjust_aces,
+    birth,
+    death,
+    sample_intergenerational_number_of_aces,
+    sample_number_of_aces,
 )
+from .individual import Individual
 
 
 def simulate(
-    number_of_years,
-    initial_population,
-    probability_of_male_birth,
-    alpha=3,
-    seed=None,
-    probability_of_heal=0,
-    probability_of_trauma=0,
-):
+    number_of_years: int,
+    initial_population: list[Individual],
+    probability_of_male_birth: float,
+    alpha: float = 1.1,
+    tempo_years_per_ace: int = 3,
+    seed: int | None = None,
+    probability_of_heal: float = 0,
+    probability_of_trauma: float = 0,
+) -> list[list[Individual]]:
     """
-    Simulate a population of individuals through which intergenerational trauma
-    is passed on.
+    Simulate an age-structured population in which adverse childhood
+    experiences (ACEs) influence fertility through both timing (tempo)
+    and intensity (quantum) effects.
+
+    The model separates two mechanisms:
+
+        1. Tempo effect:
+           Individuals with higher ACE exposure reproduce earlier.
+           This is implemented by shifting the fertility schedule younger
+           by `tempo_years_per_ace` years per ACE.
+
+        2. Quantum effect:
+           Conditional on age, individuals with ACE exposure have a
+           multiplicative increase in fertility intensity controlled by
+           `alpha`. Treating ACE=0 as unexposed and ACE>=1 as exposed:
+           f_T = alpha * f_S.
 
     Parameters
     ----------
-    number_of_years: int
-        Number of years to simulate
-    initial_population: iterable
-        A collection of Individuals
-    probability_of_male_birth: float
-        The probability of any given birth being Male (this is usually more than
-        1/2)
-    alpha: int
-        An adjustment passed to the probability of giving birth based on the
-        number of aces of the mother.
-    seed: int
-        The random seed.
-    probability_of_heal: float
-        The probability of decreasing the number of aces by one.
-    probability_of_external_childhood_trauma: float
-        The probability of a new traumatic event in childhood
+    number_of_years : int
+        Number of years to simulate.
+
+    initial_population : iterable of Individual
+        Initial population state.
+
+    probability_of_male_birth : float
+        Probability that a newborn is male.
+
+    alpha : float, default=1.1
+        Multiplicative fertility factor (quantum effect). Values greater
+        than 1 imply higher reproductive intensity for ACE-exposed
+        individuals.
+
+    tempo_years_per_ace : int, default=3
+        Number of years by which reproduction is shifted earlier per ACE
+        (tempo effect), motivated by empirical associations between ACE
+        exposure and earlier age at first birth.
+
+    seed : int or None
+        Random seed for reproducibility.
+
+    probability_of_heal : float
+        Annual probability that an adult reduces their ACE count by one.
+
+    probability_of_trauma : float
+        Annual probability that a child experiences an additional ACE.
+
+    Returns
+    -------
+    populations : list of lists
+        A history of the population at each year.
     """
     np.random.seed(seed)
-    populations = [initial_population]
+    populations: list[list[Individual]] = [initial_population]
     for _ in range(number_of_years):
 
-        population = []
+        population: list[Individual] = []
 
         for individual in populations[-1]:
             if (
@@ -56,6 +89,7 @@ def simulate(
                     age=individual.age,
                     number_of_aces=individual.number_of_aces,
                     alpha=alpha,
+                    tempo_years_per_ace=tempo_years_per_ace,
                 )
                 is True
             ):
@@ -90,21 +124,16 @@ def simulate(
 
 
 def get_population(
-    number_of_individuals,
-    population_pyramid,
-    seed=None,
-    **population_pyramid_kwargs,
-):
+    number_of_individuals: int,
+    population_pyramid: Callable[..., tuple[int, str]],
+    seed: int | None = None,
+    **population_pyramid_kwargs: Any,
+) -> list[Individual]:
     """
-    Create a population of individuals .
-
-    - Number of individuals,
-    - group: "Total", "Male" or "Female"
-    - age_distribution: a callable that returns an age
-    - age_distribution_kwargs: kwargs for age_distribution
+    Create a population by sampling from `population_pyramid`.
     """
     np.random.seed(seed)
-    individuals = []
+    individuals: list[Individual] = []
     for _ in range(number_of_individuals):
         age, sex = population_pyramid(**population_pyramid_kwargs)
         individuals.append(
@@ -117,7 +146,7 @@ def get_population(
     return individuals
 
 
-def uk_population_pyramid():
+def uk_population_pyramid() -> tuple[int, str]:
     """
     Based on this data from the Office of National Statistics
 
@@ -221,4 +250,4 @@ def uk_population_pyramid():
     probability_of_male = probability_of_male_by_age_group[age_group_index]
     sex = "Male" if np.random.random() < probability_of_male else "Female"
 
-    return np.random.randint(lower_bound, upper_bound + 1), sex
+    return int(np.random.randint(lower_bound, upper_bound + 1)), sex

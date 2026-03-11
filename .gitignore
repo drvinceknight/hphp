@@ -275,8 +275,26 @@ TSWLatexianTemp*
 # Makeindex log files
 *.lpz
 
-# Python files
-*ipynb_checkpoints/*
+# Python files
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
 
 # Environment directory
 env/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# DVC cache (local, not committed)
+.dvc/cache/
+.dvc/tmp/

@@ -1,0 +1,51 @@
+stages:
+  figure_2:
+    cmd: uv run python tex/figures/figure_2/main.py
+    deps:
+      - tex/figures/figure_2/main.py
+      - src/hphp/analytical.py
+    outs:
+      - tex/figures/figure_2/main.pdf:
+          cache: false   # keep in git
+
+  figure_3:
+    cmd: uv run python tex/figures/figure_3/main.py
+    deps:
+      - tex/figures/figure_3/main.py
+      - tex/figures/figure_4/data/raw
+    outs:
+      - tex/figures/figure_3/main.pdf:
+          cache: false   # keep in git
+
+  figure_4:
+    cmd: uv run python tex/figures/figure_4/main.py
+    deps:
+      - tex/figures/figure_4/main.py
+      - tex/figures/figure_4/data/raw
+    outs:
+      - tex/figures/figure_4/main.pdf:
+          cache: false   # keep in git
+      - tex/figures/figure_4/si.pdf:
+          cache: false   # keep in git
+      - tex/figures/figure_4/si_threshold.pdf:
+          cache: false   # keep in git
+
+  paper:
+    cmd: >-
+      cd tex &&
+      pdflatex -interaction=nonstopmode main.tex &&
+      bibtex main &&
+      pdflatex -interaction=nonstopmode main.tex &&
+      pdflatex -interaction=nonstopmode main.tex
+    deps:
+      - tex/main.tex
+      - tex/bibliography.bib
+      - tex/figures/figure_1/main.pdf
+      - tex/figures/figure_2/main.pdf
+      - tex/figures/figure_3/main.pdf
+      - tex/figures/figure_4/main.pdf
+      - tex/figures/figure_4/si.pdf
+      - tex/figures/figure_4/si_threshold.pdf
+    outs:
+      - tex/main.pdf:
+          cache: false   # keep in git
