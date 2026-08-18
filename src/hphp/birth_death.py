@@ -228,106 +228,92 @@ def death(age: int, sex: str) -> bool:
     return bool(np.random.random() < probability_of_death)
 
 
-def birth(
-    age: int,
-    number_of_aces: int = 0,
-    alpha: float = 1.0,
-    tempo_years_per_ace: int = 3,
-    maximum_shifted_aces: int = 3,
-) -> bool:
+BASELINE_BIRTH_PROBABILITY_BY_AGE = {
+    15: 0.013355,
+    16: 0.025160000000000002,
+    17: 0.040733,
+    18: 0.058070000000000004,
+    19: 0.07627800000000001,
+    20: 0.096371,
+    21: 0.110794,
+    22: 0.12112600000000001,
+    23: 0.12814699999999998,
+    24: 0.13259,
+    25: 0.134492,
+    26: 0.133936,
+    27: 0.131562,
+    28: 0.127503,
+    29: 0.121737,
+    30: 0.113844,
+    31: 0.105234,
+    32: 0.096591,
+    33: 0.087627,
+    34: 0.078933,
+    35: 0.07048399999999999,
+    36: 0.061793999999999995,
+    37: 0.053277,
+    38: 0.044770000000000004,
+    39: 0.036818,
+    40: 0.029645,
+    41: 0.023043,
+    42: 0.017268000000000002,
+    43: 0.012609,
+    44: 0.009054,
+    45: 0.006445,
+    46: 0.0046559999999999995,
+    47: 0.003414,
+    48: 0.0025670000000000003,
+    49: 0.0017,
+}
+
+# The youngest age at which the UN schedule assigns non-zero fertility. The
+# tempo effect rescales the age axis about this point.
+YOUNGEST_FERTILE_AGE = 15
+
+# Calibrated so that one ACE lowers the mean age at childbearing by 3.0 years,
+# matching the estimate in 'Adverse Childhood Experiences, Early and Nonmarital
+# Fertility, and Women's Health at Midlife'.
+PACE_INCREASE_PER_ACE = 0.3142
+
+
+def life_history_pace(
+    number_of_aces: int, pace_increase_per_ace: float = PACE_INCREASE_PER_ACE
+) -> float:
     """
-    This uses data from the UN's department of economic and social affairs
-    - <https://population.un.org/wpp/Download/Standard/Fertility/>
-    to return a boolean representing whether or not someone (able to have a
-    birth) has a birth at a given age.
+    Return the pace at which an individual moves through the fertility
+    schedule, relative to an unexposed individual.
 
-    Parameters
-    ----------
-    age : int
-        The biological age.
-    number_of_aces : int
-        Number of adverse childhood experiences.
-    alpha : float
-        Multiplicative fertility factor (replicator-style fitness multiplier).
-        Under a coarse-grained two-type model (ACE=0 vs ACE>=1), this corresponds
-        directly to the analytical parameter via f_T = alpha * f_S.
-    tempo_years_per_ace : int
-        Number of years by which reproduction is shifted earlier per ACE.
-        This implements the empirical claim that ACE exposure is associated
-        with earlier age at first birth (a tempo effect).
-    maximum_shifted_aces : int
-        Number of ACEs beyond which the tempo shift no longer increases.
-
-    We separate two mechanisms:
-
-      (1) Tempo: earlier reproductive timing.
-      (2) Quantum: multiplicative increase in fertility intensity.
+    A pace greater than one is the accelerated life-history strategy associated
+    with early adversity: the whole reproductive career runs faster, so
+    childbearing happens earlier.
     """
+    return 1.0 + pace_increase_per_ace * number_of_aces
 
-    # Tempo effect (earlier reproduction)
-    age = adjust_age_for_aces(
-        age=age,
-        number_of_aces=number_of_aces,
-        tempo_years_per_ace=tempo_years_per_ace,
-        maximum_shifted_aces=maximum_shifted_aces,
-    )
 
-    overall_probability_of_a_birth_at_given_age = {
-        15: 0.013355,
-        16: 0.025160000000000002,
-        17: 0.040733,
-        18: 0.058070000000000004,
-        19: 0.07627800000000001,
-        20: 0.096371,
-        21: 0.110794,
-        22: 0.12112600000000001,
-        23: 0.12814699999999998,
-        24: 0.13259,
-        25: 0.134492,
-        26: 0.133936,
-        27: 0.131562,
-        28: 0.127503,
-        29: 0.121737,
-        30: 0.113844,
-        31: 0.105234,
-        32: 0.096591,
-        33: 0.087627,
-        34: 0.078933,
-        35: 0.07048399999999999,
-        36: 0.061793999999999995,
-        37: 0.053277,
-        38: 0.044770000000000004,
-        39: 0.036818,
-        40: 0.029645,
-        41: 0.023043,
-        42: 0.017268000000000002,
-        43: 0.012609,
-        44: 0.009054,
-        45: 0.006445,
-        46: 0.0046559999999999995,
-        47: 0.003414,
-        48: 0.0025670000000000003,
-        49: 0.0017,
-    }
+def baseline_birth_probability(effective_age: float) -> float:
+    """
+    Linear interpolation of the UN age-specific fertility schedule.
 
-    probability = overall_probability_of_a_birth_at_given_age.get(age, 0.0)
-
-    # Quantum effect (replicator-style multiplier)
-    # Minimal two-type interpretation: traumatised if ACE >= 1
-    if number_of_aces >= 1:
-        probability = min(1.0, alpha * probability)
-
-    return bool(np.random.random() < probability)
+    Interpolation is needed because the effective age is no longer an integer
+    once the age axis is rescaled by the life-history pace.
+    """
+    if effective_age < YOUNGEST_FERTILE_AGE or effective_age >= 50:
+        return 0.0
+    lower_age = int(np.floor(effective_age))
+    fraction = effective_age - lower_age
+    lower = BASELINE_BIRTH_PROBABILITY_BY_AGE.get(lower_age, 0.0)
+    upper = BASELINE_BIRTH_PROBABILITY_BY_AGE.get(lower_age + 1, 0.0)
+    return lower * (1.0 - fraction) + upper * fraction
 
 
 def adjust_age_for_aces(
     age: int,
     number_of_aces: int,
-    tempo_years_per_ace: int = 3,
-    maximum_shifted_aces: int = 3,
-) -> int:
+    pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
+) -> float:
     """
-    This adjusts the probability based on the number of aces.
+    Return the effective age at which an individual's birth probability is
+    evaluated.
 
     This is an approximation but is based on the first table from
     'Adverse Childhood Experiences, Early and Nonmarital Fertility,
@@ -354,24 +340,78 @@ def adjust_age_for_aces(
     is equivalent to the effect of being born to a mother approximately three
     year younger.
 
-    We approximate this by shifting the fertility schedule earlier:
+    We implement this as an acceleration of the life-history schedule rather
+    than as a rigid translation of it. The age axis is rescaled about the
+    youngest fertile age,
 
-        p(age) = p(age + tempo_years_per_ace * number_of_aces)
+        effective age = 15 + (age - 15) * pace,
 
-    The addition is deliberate. Evaluating an exposed individual at an older
-    effective age brings her forward on the schedule, so that at real age 22
-    with one ACE she faces the birth probability an unexposed individual faces
-    at 25. Subtracting instead would postpone reproduction by
-    `tempo_years_per_ace` years per ACE, which is the opposite of the
-    documented effect.
+    and the birth probability is scaled by the same pace (see `birth`), so that
+    completed fertility is preserved. A rigid translation cannot do this: it
+    slides the fertile window below the youngest fertile age, and for large
+    ACE counts it
+    pushes the whole window off the bottom of the schedule, which both
+    destroys completed fertility and produces impossible ages at birth.
 
-    The shift is capped at `maximum_shifted_aces` because the source table
-    reports its highest category as '3+': beyond three ACEs the estimate has no
-    empirical support, and an uncapped shift would push the whole fertility
-    window below the youngest age in the schedule.
+    Because the schedule is compressed rather than moved, the shift in mean age
+    at childbearing saturates on its own (3.0 years at one ACE, 9.0 at eight),
+    so no cap on the ACE count is needed.
     """
-    shifted_aces = min(number_of_aces, maximum_shifted_aces)
-    return age + tempo_years_per_ace * shifted_aces
+    if age < YOUNGEST_FERTILE_AGE:
+        return float(age)
+    pace = life_history_pace(number_of_aces, pace_increase_per_ace)
+    return YOUNGEST_FERTILE_AGE + (age - YOUNGEST_FERTILE_AGE) * pace
+
+
+def birth(
+    age: int,
+    number_of_aces: int = 0,
+    alpha: float = 1.0,
+    pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
+) -> bool:
+    """
+    This uses data from the UN's department of economic and social affairs
+    - <https://population.un.org/wpp/Download/Standard/Fertility/>
+    to return a boolean representing whether or not someone (able to have a
+    birth) has a birth at a given age.
+
+    Parameters
+    ----------
+    age : int
+        The biological age.
+    number_of_aces : int
+        Number of adverse childhood experiences.
+    alpha : float
+        Multiplicative fertility factor (replicator-style fitness multiplier).
+        Under a coarse-grained two-type model (ACE=0 vs ACE>=1), this corresponds
+        directly to the analytical parameter via f_T = alpha * f_S.
+    pace_increase_per_ace : float
+        Increase in the life-history pace per ACE (the tempo effect).
+
+    We separate two mechanisms:
+
+      (1) Tempo: earlier reproductive timing, at unchanged completed fertility.
+      (2) Quantum: multiplicative increase in fertility intensity.
+    """
+    if age < YOUNGEST_FERTILE_AGE:
+        return False
+
+    # Tempo effect: compress the age axis and scale the hazard by the same
+    # pace, so that completed fertility is unchanged and only its timing moves.
+    pace = life_history_pace(number_of_aces, pace_increase_per_ace)
+    effective_age = adjust_age_for_aces(
+        age=age,
+        number_of_aces=number_of_aces,
+        pace_increase_per_ace=pace_increase_per_ace,
+    )
+    probability = pace * baseline_birth_probability(effective_age)
+
+    # Quantum effect (replicator-style multiplier)
+    # Minimal two-type interpretation: traumatised if ACE >= 1
+    if number_of_aces >= 1:
+        probability = alpha * probability
+
+    return bool(np.random.random() < min(1.0, probability))
 
 
 def sample_number_of_aces(sex: str) -> int:

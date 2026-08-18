@@ -120,9 +120,10 @@ trauma persists whenever \(\alpha(1-q)>1\).
 At each annual step the three processes act sequentially on every member of
 the population denoted as \(\mathcal{P}_t\).
 \emph{Reproduction}: surviving females may give birth with probability
-\(b(a,k)\), which combines a tempo effect, shifting the baseline schedule
-earlier by \(\tau\) years per ACE via effective age
-\(\tilde{a}=a+\tau\min(k,k_\tau)\), and a quantum effect, scaling the shifted
+\(b(a,k)\), which combines a tempo effect, rescaling the baseline schedule
+about the youngest fertile age by the life-history pace \(\pi(k)=1+\gamma k\)
+via effective age
+\(\tilde{a}=15+(a-15)\pi(k)\), and a quantum effect, scaling the rescaled
 probability by \(\alpha\) for individuals with \(k\geq 1\) ACEs.
 Each newborn is assigned a sex \(s'\) drawn from a Bernoulli with parameter
 \(p_{\mathrm{m}}\) and an ACE count \(k'\) drawn from the empirical
@@ -302,19 +303,28 @@ life-history strategies and earlier age at first birth
 proportion to ACE exposure.  Specifically, a female with \(k \geq 1\) ACEs
 evaluates her birth probability at an effective age
 \[
-    \tilde{a} = a + \tau \min(k, k_\tau),
+    \tilde{a} = a_0 + (a - a_0)\,\pi(k),
+    \qquad
+    \pi(k) = 1 + \gamma k,
 \]
-where \(\tau > 0\) is the tempo parameter (years of schedule shift per ACE).
-Evaluating at an older effective age brings the individual forward on the
-schedule, so that at real age \(a\) she faces the birth probability an
-unexposed individual faces at \(a + \tau k\); her modal age at birth falls by
-\(\tau\) years per ACE.  Empirical estimates suggest \(\tau \approx 3\)
-\cite{williams2019adverse}, which is used here.
-The shift is capped at \(k_\tau = 3\) ACEs, because the source estimate reports
-its highest exposure category as \(3+\) and an uncapped shift would move the
-whole fertility window below the youngest age in the schedule.
+where \(a_0 = 15\) is the youngest age in the fertility schedule and
+\(\pi(k)\) is the
+\emph{life-history pace} of an individual with \(k\) ACEs.  The birth
+probability is scaled by the same factor,
+\(b(a,k) \propto \pi(k)\, b_0(\tilde{a})\), so that the schedule is
+compressed rather than translated and completed fertility is preserved.
+We set \(\gamma = 0.314\), calibrated so that a single ACE lowers the mean age
+at childbearing by three years, matching the estimate of Williams and Cheadle
+\cite{williams2019adverse}.
+We rescale rather than translate because a rigid shift of an age-bounded
+schedule moves the fertile window below \(a_0\), and for large \(k\) pushes it
+off the schedule entirely, which destroys completed fertility and produces
+implausible ages at birth.  Under rescaling the shift in mean age at
+childbearing saturates on its own, from three years at \(k=1\) to nine years at
+\(k=8\), so no cap on \(k\) is required.
 This implements a purely timing adjustment: completed fertility is unaffected
-in the absence of the quantum mechanism described below.
+in the absence of the quantum mechanism described below (it varies by less than
+2.2\% across \(k\)).
 
 \paragraph{Quantum effect (differential reproductive intensity).}
 Conditional on effective age \(\tilde{a}\), the birth probability of a female
@@ -323,7 +333,7 @@ with \(k \geq 1\) ACEs is scaled by a multiplicative factor \(\alpha > 1\):
     b(a, k) =
     \begin{cases}
         b_0(\tilde{a})          & \text{if } k = 0, \\
-        \min\!\bigl(1,\, \alpha\, b_0(\tilde{a})\bigr) & \text{if } k \geq 1.
+        \min\!\bigl(1,\, \alpha\, \pi(k)\, b_0(\tilde{a})\bigr) & \text{if } k \geq 1.
     \end{cases}
 \]
 Under a coarse-grained binary classification (ACE-free versus ACE-exposed),
@@ -465,7 +475,7 @@ steady-state shape imposed by the empirical fertility and mortality schedules.}
     \caption{\textbf{Simulation outcomes across parameter regimes (mean ACE count).}
 Panels are arranged in three rows and two columns; the left column shows
 results without background trauma exposure (\(p = 0\)) and the right column
-with positive background exposure (\(p = 0.2\)).
+with positive background exposure (\(p = 0.05\)).
 \textbf{A--B}, Time trajectories of mean ACEs per person for six combinations
 of healing probability \(q\) and reproductive multiplier \(\alpha\), shown as
 median \(\pm\) IQR across simulation replicates.  The dashed vertical line marks
@@ -580,7 +590,7 @@ epidemic theory: a minimal model with an explicit persistence threshold.
     \caption{\textbf{Simulation outcomes across parameter regimes (proportion traumatised).}
 Layout mirrors Fig.~\ref{fig:simulation-outcomes}.  Left column: no background
 trauma exposure (\(p = 0\)); right column: positive background exposure
-(\(p = 0.2\)).
+(\(p = 0.05\)).
 \textbf{A--B}, Time trajectories of the proportion of individuals with at least
 one ACE for the same six parameter combinations as Fig.~\ref{fig:simulation-outcomes},
 shown as median \(\pm\) IQR.

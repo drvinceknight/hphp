@@ -18,8 +18,7 @@ def simulate(
     initial_population: list[Individual],
     probability_of_male_birth: float,
     alpha: float = 1.1,
-    tempo_years_per_ace: int = 3,
-    maximum_shifted_aces: int = 3,
+    pace_increase_per_ace: float = 0.3142,
     seed: int | None = None,
     probability_of_heal: float = 0,
     probability_of_trauma: float = 0,
@@ -33,8 +32,10 @@ def simulate(
 
         1. Tempo effect:
            Individuals with higher ACE exposure reproduce earlier.
-           This is implemented by shifting the fertility schedule younger
-           by `tempo_years_per_ace` years per ACE.
+           This is implemented by rescaling the fertility schedule about
+           the youngest fertile age by a pace of
+           1 + `pace_increase_per_ace` per ACE, at unchanged completed
+           fertility.
 
         2. Quantum effect:
            Conditional on age, individuals with ACE exposure have a
@@ -58,14 +59,11 @@ def simulate(
         than 1 imply higher reproductive intensity for ACE-exposed
         individuals.
 
-    tempo_years_per_ace : int, default=3
-        Number of years by which reproduction is shifted earlier per ACE
-        (tempo effect), motivated by empirical associations between ACE
-        exposure and earlier age at first birth.
-
-    maximum_shifted_aces : int, default=3
-        Number of ACEs beyond which the tempo shift no longer increases.
-        The source estimate reports its highest category as '3+'.
+    pace_increase_per_ace : float, default=0.3142
+        Increase in the life-history pace per ACE (tempo effect), motivated by
+        empirical associations between ACE exposure and earlier age at first
+        birth. The default is calibrated so one ACE lowers the mean age at
+        childbearing by three years.
 
     seed : int or None
         Random seed for reproducibility.
@@ -94,8 +92,7 @@ def simulate(
                     age=individual.age,
                     number_of_aces=individual.number_of_aces,
                     alpha=alpha,
-                    tempo_years_per_ace=tempo_years_per_ace,
-                    maximum_shifted_aces=maximum_shifted_aces,
+                    pace_increase_per_ace=pace_increase_per_ace,
                 )
                 is True
             ):

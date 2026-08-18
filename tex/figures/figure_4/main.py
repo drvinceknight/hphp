@@ -590,7 +590,7 @@ if __name__ == "__main__":
 
     shared_kwargs = dict(
         q_heal=[0.0, 0.01, 0.02, 0.05, 0.1],
-        p_high=0.2,
+        p_high=0.05,
         warm_up=100,
         adjust_y_limits=True,
         trajectory_subsets=[
