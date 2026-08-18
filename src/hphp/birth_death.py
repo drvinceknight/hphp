@@ -512,11 +512,17 @@ def adjust_aces(
     - A child (less than 18) can gain another ace from an external factor.
     - An adult (18 or more) can reduce their number of aces by 1.
 
+    The two cases are mutually exclusive: healing represents adult recovery
+    processes, so a child whose trauma draw fails does not then get a chance to
+    heal. Exactly one uniform draw is consumed per individual per year.
+
     See e.g. "The Association Between Parent and Child ACEs is Buffered by
     Forgiveness of Others and Self-Forgiveness", J Child Adolesc Trauma (2023).
     """
-    if (individual.age < 18) and (np.random.random() < probability_of_trauma):
-        return min(8, individual.number_of_aces + 1) - individual.number_of_aces
+    if individual.age < 18:
+        if np.random.random() < probability_of_trauma:
+            return min(8, individual.number_of_aces + 1) - individual.number_of_aces
+        return 0
     if np.random.random() < probability_of_heal:
         return max(0, individual.number_of_aces - 1) - individual.number_of_aces
     return 0

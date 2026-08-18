@@ -489,6 +489,54 @@ def test_adjust_aces_for_adults():
         assert -1 <= delta <= 0
 
 
+def test_children_never_heal():
+    """
+    Healing is an adult process, so a child must never lose an ACE, whatever
+    the healing probability.
+
+    Both probabilities are positive here: with either one switched off the
+    child and adult branches cannot interact, which is what allowed a
+    fall-through from the trauma branch into the healing branch to go
+    unnoticed.
+    """
+    np.random.seed(0)
+    repetitions = 20_000
+    individual = hphp.simulation.Individual(sex="Female", age=10, number_of_aces=4)
+
+    deltas = [
+        hphp.simulation.adjust_aces(
+            individual, probability_of_heal=0.5, probability_of_trauma=0.2
+        )
+        for _ in range(repetitions)
+    ]
+
+    assert min(deltas) == 0
+    assert max(deltas) == 1
+
+    proportion_gaining = sum(delta == 1 for delta in deltas) / repetitions
+    assert 0.19 < proportion_gaining < 0.21
+
+
+def test_adults_heal_at_the_healing_probability():
+    """An adult is unaffected by the trauma probability."""
+    np.random.seed(0)
+    repetitions = 20_000
+    individual = hphp.simulation.Individual(sex="Female", age=30, number_of_aces=4)
+
+    deltas = [
+        hphp.simulation.adjust_aces(
+            individual, probability_of_heal=0.5, probability_of_trauma=0.2
+        )
+        for _ in range(repetitions)
+    ]
+
+    assert min(deltas) == -1
+    assert max(deltas) == 0
+
+    proportion_healing = sum(delta == -1 for delta in deltas) / repetitions
+    assert 0.49 < proportion_healing < 0.51
+
+
 def test_get_initial_population():
     number_of_initial_individuals = 100
     seed = 0
