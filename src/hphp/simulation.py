@@ -19,6 +19,7 @@ def simulate(
     probability_of_male_birth: float,
     alpha: float = 1.1,
     tempo_years_per_ace: int = 3,
+    maximum_shifted_aces: int = 3,
     seed: int | None = None,
     probability_of_heal: float = 0,
     probability_of_trauma: float = 0,
@@ -62,6 +63,10 @@ def simulate(
         (tempo effect), motivated by empirical associations between ACE
         exposure and earlier age at first birth.
 
+    maximum_shifted_aces : int, default=3
+        Number of ACEs beyond which the tempo shift no longer increases.
+        The source estimate reports its highest category as '3+'.
+
     seed : int or None
         Random seed for reproducibility.
 
@@ -90,6 +95,7 @@ def simulate(
                     number_of_aces=individual.number_of_aces,
                     alpha=alpha,
                     tempo_years_per_ace=tempo_years_per_ace,
+                    maximum_shifted_aces=maximum_shifted_aces,
                 )
                 is True
             ):

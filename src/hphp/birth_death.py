@@ -229,7 +229,11 @@ def death(age: int, sex: str) -> bool:
 
 
 def birth(
-    age: int, number_of_aces: int = 0, alpha: float = 1.0, tempo_years_per_ace: int = 3
+    age: int,
+    number_of_aces: int = 0,
+    alpha: float = 1.0,
+    tempo_years_per_ace: int = 3,
+    maximum_shifted_aces: int = 3,
 ) -> bool:
     """
     This uses data from the UN's department of economic and social affairs
@@ -251,6 +255,8 @@ def birth(
         Number of years by which reproduction is shifted earlier per ACE.
         This implements the empirical claim that ACE exposure is associated
         with earlier age at first birth (a tempo effect).
+    maximum_shifted_aces : int
+        Number of ACEs beyond which the tempo shift no longer increases.
 
     We separate two mechanisms:
 
@@ -258,11 +264,12 @@ def birth(
       (2) Quantum: multiplicative increase in fertility intensity.
     """
 
-    # ---- Tempo effect (earlier reproduction) ----
+    # Tempo effect (earlier reproduction)
     age = adjust_age_for_aces(
         age=age,
         number_of_aces=number_of_aces,
         tempo_years_per_ace=tempo_years_per_ace,
+        maximum_shifted_aces=maximum_shifted_aces,
     )
 
     overall_probability_of_a_birth_at_given_age = {
@@ -305,7 +312,7 @@ def birth(
 
     probability = overall_probability_of_a_birth_at_given_age.get(age, 0.0)
 
-    # ---- Quantum effect (replicator-style multiplier) ----
+    # Quantum effect (replicator-style multiplier)
     # Minimal two-type interpretation: traumatised if ACE >= 1
     if number_of_aces >= 1:
         probability = min(1.0, alpha * probability)
@@ -314,7 +321,10 @@ def birth(
 
 
 def adjust_age_for_aces(
-    age: int, number_of_aces: int, tempo_years_per_ace: int = 3
+    age: int,
+    number_of_aces: int,
+    tempo_years_per_ace: int = 3,
+    maximum_shifted_aces: int = 3,
 ) -> int:
     """
     This adjusts the probability based on the number of aces.
@@ -346,9 +356,22 @@ def adjust_age_for_aces(
 
     We approximate this by shifting the fertility schedule earlier:
 
-        p(age) = p(age - tempo_years_per_ace * number_of_aces)
+        p(age) = p(age + tempo_years_per_ace * number_of_aces)
+
+    The addition is deliberate. Evaluating an exposed individual at an older
+    effective age brings her forward on the schedule, so that at real age 22
+    with one ACE she faces the birth probability an unexposed individual faces
+    at 25. Subtracting instead would postpone reproduction by
+    `tempo_years_per_ace` years per ACE, which is the opposite of the
+    documented effect.
+
+    The shift is capped at `maximum_shifted_aces` because the source table
+    reports its highest category as '3+': beyond three ACEs the estimate has no
+    empirical support, and an uncapped shift would push the whole fertility
+    window below the youngest age in the schedule.
     """
-    return age - tempo_years_per_ace * number_of_aces
+    shifted_aces = min(number_of_aces, maximum_shifted_aces)
+    return age + tempo_years_per_ace * shifted_aces
 
 
 def sample_number_of_aces(sex: str) -> int:

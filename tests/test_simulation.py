@@ -52,98 +52,118 @@ def test_get_expected_number_of_births_for_specific_25_year_olds():
 
 
 def test_adjustment_for_age():
+    """
+    The tempo effect brings reproduction forward, so an exposed individual is
+    evaluated at an older effective age.
+    """
     age = 15
     adjusted_age = hphp.birth_death.adjust_age_for_aces(age=age, number_of_aces=0)
     assert age == adjusted_age
 
     age = 15
     adjusted_age = hphp.birth_death.adjust_age_for_aces(age=age, number_of_aces=1)
-    assert age - 3 == adjusted_age
+    assert age + 3 == adjusted_age
 
     age = 15
     adjusted_age = hphp.birth_death.adjust_age_for_aces(
         age=age, number_of_aces=1, tempo_years_per_ace=2
     )
-    assert age - 2 == adjusted_age
+    assert age + 2 == adjusted_age
 
     age = 25
     adjusted_age = hphp.birth_death.adjust_age_for_aces(
-        age=age, number_of_aces=5, tempo_years_per_ace=2
+        age=age, number_of_aces=5, tempo_years_per_ace=2, maximum_shifted_aces=5
     )
-    assert age - 10 == adjusted_age
+    assert age + 10 == adjusted_age
 
 
-def test_get_expected_difference_for_25_year_olds():
+def test_adjustment_for_age_is_capped():
+    """
+    Beyond `maximum_shifted_aces` the shift stops growing, so the fertility
+    window cannot run off the bottom of the schedule.
+    """
+    age = 25
+    capped_adjusted_age = hphp.birth_death.adjust_age_for_aces(
+        age=age, number_of_aces=3
+    )
+    assert capped_adjusted_age == age + 9
+
+    for number_of_aces in range(3, 9):
+        adjusted_age = hphp.birth_death.adjust_age_for_aces(
+            age=age, number_of_aces=number_of_aces
+        )
+        assert adjusted_age == capped_adjusted_age
+
+
+def test_mean_age_at_birth_falls_with_aces():
+    """
+    The model claim under test: ACE exposure shifts childbearing earlier.
+
+    Measured across the schedule rather than at a single age, because at the
+    peak of the schedule (25) a shift in either direction lowers the birth
+    probability and so cannot distinguish the two directions.
+    """
+    mean_ages = [
+        _schedule_mean_age_at_birth(number_of_aces=number_of_aces)
+        for number_of_aces in range(4)
+    ]
+
+    assert mean_ages == sorted(mean_ages, reverse=True)
+    assert mean_ages[1] == mean_ages[0] - 3
+    assert mean_ages[3] == mean_ages[0] - 9
+
+    assert _schedule_mean_age_at_birth(number_of_aces=8) == mean_ages[3]
+
+
+def _schedule_mean_age_at_birth(number_of_aces):
+    """Mean age at birth implied by the fertility schedule, ignoring mortality."""
+    total_weight = 0.0
+    weighted_age = 0.0
+    for age in range(101):
+        effective_age = hphp.birth_death.adjust_age_for_aces(
+            age=age, number_of_aces=number_of_aces
+        )
+        probability = _BASELINE_SCHEDULE.get(effective_age, 0.0)
+        total_weight += probability
+        weighted_age += probability * age
+    return round(weighted_age / total_weight, 2)
+
+
+_BASELINE_SCHEDULE = {
+    15: 0.013355, 16: 0.025160, 17: 0.040733, 18: 0.058070, 19: 0.076278,
+    20: 0.096371, 21: 0.110794, 22: 0.121126, 23: 0.128147, 24: 0.132590,
+    25: 0.134492, 26: 0.133936, 27: 0.131562, 28: 0.127503, 29: 0.121737,
+    30: 0.113844, 31: 0.105234, 32: 0.096591, 33: 0.087627, 34: 0.078933,
+    35: 0.070484, 36: 0.061794, 37: 0.053277, 38: 0.044770, 39: 0.036818,
+    40: 0.029645, 41: 0.023043, 42: 0.017268, 43: 0.012609, 44: 0.009054,
+    45: 0.006445, 46: 0.004656, 47: 0.003414, 48: 0.002567, 49: 0.001700,
+}
+
+
+def test_get_expected_difference_for_20_year_olds():
     """
     This tests that aces impact on births in the expected way.
 
-    For 25 year olds: the number of births decreases with the number of aces.
+    For 20 year olds (below the peak of the schedule at 25): the number of
+    births increases with the number of aces, up to the cap.
     """
-    age = 25
-    np.random.seed(0)
+    age = 20
     number_of_repetitions = 1_000
-    number_of_aces = 0
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
-        )
-        == 139
-    )
 
-    number_of_aces = 1
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
+    counts = []
+    for number_of_aces in range(5):
+        np.random.seed(0)
+        counts.append(
+            sum(
+                hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
+                for _ in range(number_of_repetitions)
+            )
         )
-        == 132
-    )
 
-    number_of_aces = 2
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
-        )
-        == 69
-    )
-
-    number_of_aces = 3
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
-        )
-        == 26
-    )
-
-    number_of_aces = 4
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
-        )
-        == 0
-    )
-
-    number_of_aces = 5
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
-        )
-        == 0
-    )
-
-    number_of_aces = 6
-    assert (
-        sum(
-            hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
-            for _ in range(number_of_repetitions)
-        )
-        == 0
-    )
+    assert counts == [89, 129, 139, 128, 128]
+    assert counts[1] > counts[0]
+    assert counts[2] > counts[0]
+    assert counts[4] == counts[3]
 
 
 def test_number_of_deaths_in_given_year_for_ages_outside_range_gives_a_death_male():

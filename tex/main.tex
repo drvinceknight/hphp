@@ -120,10 +120,10 @@ trauma persists whenever \(\alpha(1-q)>1\).
 At each annual step the three processes act sequentially on every member of
 the population denoted as \(\mathcal{P}_t\).
 \emph{Reproduction}: surviving females may give birth with probability
-\(b(a,k)\), which combines a tempo effect---shifting the baseline schedule
-earlier by \(\tau\) years per ACE via effective age \(\tilde{a}=a-\tau k\)---and
-a quantum effect---scaling the shifted probability by \(\alpha\) for individuals
-with \(k\geq 1\) ACEs.
+\(b(a,k)\), which combines a tempo effect, shifting the baseline schedule
+earlier by \(\tau\) years per ACE via effective age
+\(\tilde{a}=a+\tau\min(k,k_\tau)\), and a quantum effect, scaling the shifted
+probability by \(\alpha\) for individuals with \(k\geq 1\) ACEs.
 Each newborn is assigned a sex \(s'\) drawn from a Bernoulli with parameter
 \(p_{\mathrm{m}}\) and an ACE count \(k'\) drawn from the empirical
 intergenerational conditional distribution \(\Pr(k'\mid k)\).
@@ -302,11 +302,17 @@ life-history strategies and earlier age at first birth
 proportion to ACE exposure.  Specifically, a female with \(k \geq 1\) ACEs
 evaluates her birth probability at an effective age
 \[
-    \tilde{a} = a - \tau k,
+    \tilde{a} = a + \tau \min(k, k_\tau),
 \]
 where \(\tau > 0\) is the tempo parameter (years of schedule shift per ACE).
-Empirical estimates suggest \(\tau \approx 3\)
+Evaluating at an older effective age brings the individual forward on the
+schedule, so that at real age \(a\) she faces the birth probability an
+unexposed individual faces at \(a + \tau k\); her modal age at birth falls by
+\(\tau\) years per ACE.  Empirical estimates suggest \(\tau \approx 3\)
 \cite{williams2019adverse}, which is used here.
+The shift is capped at \(k_\tau = 3\) ACEs, because the source estimate reports
+its highest exposure category as \(3+\) and an uncapped shift would move the
+whole fertility window below the youngest age in the schedule.
 This implements a purely timing adjustment: completed fertility is unaffected
 in the absence of the quantum mechanism described below.
 
