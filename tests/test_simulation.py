@@ -1,6 +1,7 @@
 import numpy as np
-import hphp.simulation
+
 import hphp.birth_death
+import hphp.simulation
 
 
 def test_number_of_births_in_given_year_for_ages_out_of_data_set():
@@ -348,7 +349,12 @@ def test_number_of_aces_for_female_group():
 
 
 def test_individual():
-    individual = hphp.simulation.Individual(sex="Male", age=21, number_of_aces=3)
+    individual = hphp.simulation.Individual(
+            sex="Male",
+            age=21,
+            number_of_aces=3,
+            childhood_number_of_aces=3,
+        )
     assert individual.sex == "Male"
     assert individual.age == 21
     assert individual.number_of_aces == 3
@@ -448,7 +454,10 @@ def test_adjust_aces_with_no_probability():
     repetitions = 100
     for _ in range(repetitions):
         individual = hphp.simulation.Individual(
-            sex="Male", age=np.random.randint(0, 100), number_of_aces=3
+            sex="Male",
+            age=np.random.randint(0, 100),
+            number_of_aces=3,
+            childhood_number_of_aces=3,
         )
         delta = hphp.simulation.adjust_aces(
             individual,
@@ -464,7 +473,10 @@ def test_adjust_aces_for_children():
     repetitions = 100
     for _ in range(repetitions):
         individual = hphp.simulation.Individual(
-            sex="Male", age=np.random.randint(0, 18), number_of_aces=3
+            sex="Male",
+            age=np.random.randint(0, 18),
+            number_of_aces=3,
+            childhood_number_of_aces=3,
         )
         delta = hphp.simulation.adjust_aces(
             individual,
@@ -480,7 +492,10 @@ def test_adjust_aces_for_adults():
     repetitions = 100
     for _ in range(repetitions):
         individual = hphp.simulation.Individual(
-            sex="Male", age=np.random.randint(18, 100), number_of_aces=3
+            sex="Male",
+            age=np.random.randint(18, 100),
+            number_of_aces=3,
+            childhood_number_of_aces=3,
         )
         delta = hphp.simulation.adjust_aces(
             individual,
@@ -502,7 +517,12 @@ def test_children_never_heal():
     """
     np.random.seed(0)
     repetitions = 20_000
-    individual = hphp.simulation.Individual(sex="Female", age=10, number_of_aces=4)
+    individual = hphp.simulation.Individual(
+            sex="Female",
+            age=10,
+            number_of_aces=4,
+            childhood_number_of_aces=4,
+        )
 
     deltas = [
         hphp.simulation.adjust_aces(
@@ -522,7 +542,12 @@ def test_adults_heal_at_the_healing_probability():
     """An adult is unaffected by the trauma probability."""
     np.random.seed(0)
     repetitions = 20_000
-    individual = hphp.simulation.Individual(sex="Female", age=30, number_of_aces=4)
+    individual = hphp.simulation.Individual(
+            sex="Female",
+            age=30,
+            number_of_aces=4,
+            childhood_number_of_aces=4,
+        )
 
     deltas = [
         hphp.simulation.adjust_aces(
@@ -551,3 +576,50 @@ def test_get_initial_population():
         assert individual.sex in ("Male", "Female")
         assert 0 <= individual.age <= 100
         assert 0 <= individual.number_of_aces <= 8
+
+
+def test_healing_does_not_reopen_fertility():
+    """
+    An adult who has aged out of her compressed fertility window must not
+    re-enter it by healing: the life-history pace is fixed by childhood
+    adversity, so recovery changes how much she reproduces, never when.
+    """
+    age = 30
+    probability_before_healing = _birth_probability(
+        age=age, number_of_aces=8, childhood_number_of_aces=8
+    )
+    probability_after_healing = _birth_probability(
+        age=age, number_of_aces=2, childhood_number_of_aces=8
+    )
+    assert probability_before_healing == 0.0
+    assert probability_after_healing == 0.0
+
+    # Recomputing the pace from the current count is what reopens the window.
+    if_pace_followed_healing = _birth_probability(
+        age=age, number_of_aces=2, childhood_number_of_aces=2
+    )
+    assert if_pace_followed_healing > 0.0
+
+
+def test_healing_still_removes_the_quantum_advantage():
+    """Recovery must keep acting on fertility intensity."""
+    age = 20
+    with_aces = _birth_probability(
+        age=age, number_of_aces=4, childhood_number_of_aces=4, alpha=1.5
+    )
+    healed = _birth_probability(
+        age=age, number_of_aces=0, childhood_number_of_aces=4, alpha=1.5
+    )
+    assert with_aces > healed > 0.0
+
+
+def _birth_probability(age, number_of_aces, childhood_number_of_aces, alpha=1.0):
+    """The birth probability `birth` samples against, computed directly."""
+    pace = hphp.birth_death.life_history_pace(childhood_number_of_aces)
+    effective_age = hphp.birth_death.adjust_age_for_aces(
+        age=age, number_of_aces=childhood_number_of_aces
+    )
+    probability = pace * hphp.birth_death.baseline_birth_probability(effective_age)
+    if number_of_aces >= 1:
+        probability = min(1.0, alpha * probability)
+    return probability

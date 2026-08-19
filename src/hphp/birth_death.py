@@ -3,18 +3,8 @@ import numpy.typing as npt
 
 from .individual import Individual
 
-
-def death(age: int, sex: str) -> bool:
-    """
-    This uses data from the UN's department of economic and social affairs
-    https://population.un.org/wpp/Download/Standard/Mortality/
-    returning True if the individual dies at the given age.
-
-    Life Tables - Based on 1985.
-
-    """
-    if sex == "Male":
-        probability_of_death_at_give_age = [
+PROBABILITY_OF_DEATH_BY_AGE = {
+    "Male": [
             0.07446,
             0.01592,
             0.00925,
@@ -116,9 +106,8 @@ def death(age: int, sex: str) -> bool:
             0.35664,
             0.37224,
             1.0000,
-        ]
-    else:
-        probability_of_death_at_give_age = [
+    ],
+    "Female": [
             0.07033,
             0.01503,
             0.00883,
@@ -220,9 +209,38 @@ def death(age: int, sex: str) -> bool:
             0.32225,
             0.33985,
             1.0000,
-        ]
+    ],
+}
+
+
+def survivorship(sex: str) -> list[float]:
+    """
+    Cumulative probability of surviving from birth to each age.
+
+    This is the $l(x)$ column of the life table, derived from
+    `PROBABILITY_OF_DEATH_BY_AGE`.
+    """
+    probabilities = PROBABILITY_OF_DEATH_BY_AGE[sex]
+    surviving = [1.0]
+    for probability_of_death in probabilities:
+        surviving.append(surviving[-1] * (1.0 - probability_of_death))
+    return surviving
+
+
+def death(age: int, sex: str) -> bool:
+    """
+    This uses data from the UN's department of economic and social affairs
+    https://population.un.org/wpp/Download/Standard/Mortality/
+    returning True if the individual dies at the given age.
+
+    Life Tables - Based on 1985.
+
+    """
+    probabilities = PROBABILITY_OF_DEATH_BY_AGE[
+        "Male" if sex == "Male" else "Female"
+    ]
     try:
-        probability_of_death = probability_of_death_at_give_age[age]
+        probability_of_death = probabilities[age]
     except IndexError:
         probability_of_death = 1
     return bool(np.random.random() < probability_of_death)
@@ -368,6 +386,7 @@ def birth(
     number_of_aces: int = 0,
     alpha: float = 1.0,
     pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
+    childhood_number_of_aces: int | None = None,
 ) -> bool:
     """
     This uses data from the UN's department of economic and social affairs
@@ -387,6 +406,11 @@ def birth(
         directly to the analytical parameter via f_T = alpha * f_S.
     pace_increase_per_ace : float
         Increase in the life-history pace per ACE (the tempo effect).
+    childhood_number_of_aces : int or None
+        ACE count at the end of childhood, which sets the life-history pace.
+        Defaults to `number_of_aces`. The tempo effect uses this while the
+        quantum effect uses the current count, so that recovery changes how
+        much an individual reproduces but not when.
 
     We separate two mechanisms:
 
@@ -398,10 +422,14 @@ def birth(
 
     # Tempo effect: compress the age axis and scale the hazard by the same
     # pace, so that completed fertility is unchanged and only its timing moves.
-    pace = life_history_pace(number_of_aces, pace_increase_per_ace)
+    # The pace is fixed by childhood adversity; recomputing it from the current
+    # count would let healing move an individual back onto the schedule.
+    if childhood_number_of_aces is None:
+        childhood_number_of_aces = number_of_aces
+    pace = life_history_pace(childhood_number_of_aces, pace_increase_per_ace)
     effective_age = adjust_age_for_aces(
         age=age,
-        number_of_aces=number_of_aces,
+        number_of_aces=childhood_number_of_aces,
         pace_increase_per_ace=pace_increase_per_ace,
     )
     probability = pace * baseline_birth_probability(effective_age)
@@ -476,7 +504,7 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int
     Which contains this table (Table 3):
 
     Mother ACES: 0                1                2-3              4+
-    Child 0:     42.6% (38.4-46.7) 37.8% (32.4-46.7) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
+    Child 0:     42.6% (38.4-46.7) 37.8% (32.4-43.1) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
     Child 1:     25.8% (21.9-29.6) 29.7% (23.9-35.5) 28.4% (22.2-34.7) 23.2% (14.1-32.2)
     Child 2-3:   25.8% (21.9-29.7) 21.5% (16.3-26.7) 21.3% (15.7-26.8) 23.8% (15.6-32.0)
     Child 4+:    5.8% (4.0-7.7)    11.0% (6.3-15.6)  19.9% (13.7-26.1) 27.9% (18.9-36.9)

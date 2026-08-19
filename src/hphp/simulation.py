@@ -93,6 +93,7 @@ def simulate(
                     number_of_aces=individual.number_of_aces,
                     alpha=alpha,
                     pace_increase_per_ace=pace_increase_per_ace,
+                    childhood_number_of_aces=individual.childhood_number_of_aces,
                 )
                 is True
             ):
@@ -105,7 +106,12 @@ def simulate(
                     number_of_maternal_aces=individual.number_of_aces
                 )
                 population.append(
-                    Individual(sex=sex, number_of_aces=number_of_aces, age=0)
+                    Individual(
+                        sex=sex,
+                        number_of_aces=number_of_aces,
+                        age=0,
+                        childhood_number_of_aces=number_of_aces,
+                    )
                 )
 
             if death(age=individual.age, sex=individual.sex) is False:
@@ -117,8 +123,21 @@ def simulate(
                 )
                 new_number_of_aces = individual.number_of_aces + aces_delta
                 sex = individual.sex
+                # Childhood adversity is still accumulating below 18; from 18
+                # onwards it is frozen, so that the life-history pace it sets
+                # is not undone by later healing.
+                childhood_number_of_aces = (
+                    new_number_of_aces
+                    if new_age < 18
+                    else individual.childhood_number_of_aces
+                )
                 population.append(
-                    Individual(age=new_age, sex=sex, number_of_aces=new_number_of_aces)
+                    Individual(
+                        age=new_age,
+                        sex=sex,
+                        number_of_aces=new_number_of_aces,
+                        childhood_number_of_aces=childhood_number_of_aces,
+                    )
                 )
 
         populations.append(population)
@@ -139,11 +158,13 @@ def get_population(
     individuals: list[Individual] = []
     for _ in range(number_of_individuals):
         age, sex = population_pyramid(**population_pyramid_kwargs)
+        number_of_aces = sample_number_of_aces(sex=sex)
         individuals.append(
             Individual(
                 age=age,
                 sex=sex,
-                number_of_aces=sample_number_of_aces(sex=sex),
+                number_of_aces=number_of_aces,
+                childhood_number_of_aces=number_of_aces,
             )
         )
     return individuals

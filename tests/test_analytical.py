@@ -1,6 +1,7 @@
 import numpy as np
-import hphp.analytical
+import pytest
 
+import hphp.analytical
 
 # ── get_x_T_prime ─────────────────────────────────────────────────────────────
 
@@ -128,8 +129,10 @@ def test_find_roots_matches_x_star():
     """Roots of delta should match x_star_equilibrium."""
     alpha, p, q = 1.1, 0.05, 0.07
     xs = np.linspace(0, 1, 2000)
-    f = lambda x: hphp.analytical.delta(x, alpha, p, q)
-    roots = hphp.analytical.find_roots_on_unit_interval(f, xs)
+    def net_change(x):
+        return hphp.analytical.delta(x, alpha, p, q)
+
+    roots = hphp.analytical.find_roots_on_unit_interval(net_change, xs)
     x_star = hphp.analytical.x_star_equilibrium(alpha, p, q)
     assert any(np.isclose(r, x_star, atol=1e-4) for r in roots)
 
@@ -140,13 +143,46 @@ def test_is_stable_equilibrium_stable():
     """x* for (α=1.1, p=0.05, q=0.07) should be stable."""
     alpha, p, q = 1.1, 0.05, 0.07
     x_star = hphp.analytical.x_star_equilibrium(alpha, p, q)
-    f = lambda x: hphp.analytical.delta(x, alpha, p, q)
-    assert hphp.analytical.is_stable_equilibrium(f, x_star) is True
+    def net_change(x):
+        return hphp.analytical.delta(x, alpha, p, q)
+
+    assert hphp.analytical.is_stable_equilibrium(net_change, x_star) is True
 
 
 def test_is_stable_equilibrium_unstable():
     """x=0 for (α=1.5, p=0, q=0.1) is unstable (derivative > 0 there)."""
     alpha, p, q = 1.5, 0.0, 0.1
-    f = lambda x: hphp.analytical.delta(x, alpha, p, q)
+    def net_change(x):
+        return hphp.analytical.delta(x, alpha, p, q)
+
     # x=0 is a root of delta when p=0; α*(1-q)=1.35>1 so it is unstable
-    assert hphp.analytical.is_stable_equilibrium(f, 0.0) is False
+    assert hphp.analytical.is_stable_equilibrium(net_change, 0.0) is False
+
+
+def test_x_star_at_alpha_one_is_the_linear_root():
+    """At alpha = 1 the quadratic degenerates to (p + q)x - p = 0."""
+    p, q = 0.05, 0.07
+    assert hphp.analytical.x_star_equilibrium(1.0, p, q) == pytest.approx(p / (p + q))
+
+
+def test_x_star_at_alpha_one_with_no_transmission_or_healing():
+    assert hphp.analytical.x_star_equilibrium(1.0, 0.0, 0.0) == 0.0
+
+
+def test_x_star_is_continuous_at_alpha_one():
+    """alpha = 1 is a removable singularity, not a discontinuity."""
+    p, q = 0.05, 0.07
+    at_one = hphp.analytical.x_star_equilibrium(1.0, p, q)
+    for offset in (1e-4, 1e-5, 1e-6):
+        assert hphp.analytical.x_star_equilibrium(1 + offset, p, q) == pytest.approx(
+            at_one, abs=1e-3
+        )
+        assert hphp.analytical.x_star_equilibrium(1 - offset, p, q) == pytest.approx(
+            at_one, abs=1e-3
+        )
+
+
+def test_x_star_at_alpha_one_is_a_fixed_point():
+    p, q = 0.05, 0.07
+    x_star = hphp.analytical.x_star_equilibrium(1.0, p, q)
+    assert hphp.analytical.get_x_T_prime(x_star, 1.0, p, q) == pytest.approx(x_star)

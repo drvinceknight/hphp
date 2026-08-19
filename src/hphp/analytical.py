@@ -31,11 +31,24 @@ def simulation(
 
 
 def x_star_equilibrium(alpha: float, p: float, q: float) -> float:
-    """Closed-form equilibrium x* in [0, 1]."""
+    r"""Closed-form equilibrium x* in [0, 1].
+
+    Interior equilibria solve
+
+    $$(\alpha - 1)x^2 + (1 + p - \alpha + \alpha q)x - p = 0.$$
+
+    At $\alpha = 1$ the quadratic term vanishes and the equation degenerates to
+    the linear $(p + q)x - p = 0$, giving $x^* = p / (p + q)$. This is a
+    removable singularity rather than a special case: the quadratic root tends
+    to the same limit as $\alpha \to 1$.
+    """
+    if alpha == 1.0:
+        return float(p / (p + q)) if (p + q) > 0 else 0.0
     if p > 0:
-        B = 1 + p - alpha + alpha * q
-        disc = B**2 + 4 * p * (alpha - 1)
-        return float(np.clip((-B + np.sqrt(disc)) / (2 * (alpha - 1)), 0.0, 1.0))
+        linear_coefficient = 1 + p - alpha + alpha * q
+        discriminant = linear_coefficient**2 + 4 * p * (alpha - 1)
+        root = (-linear_coefficient + np.sqrt(discriminant)) / (2 * (alpha - 1))
+        return float(np.clip(root, 0.0, 1.0))
     if alpha * (1 - q) > 1:
         return float(np.clip(1 - (alpha * q) / (alpha - 1), 0.0, 1.0))
     return 0.0
