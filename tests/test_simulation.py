@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import hphp.birth_death
 import hphp.simulation
@@ -44,10 +45,13 @@ def test_get_expected_number_of_births_for_specific_25_year_olds():
     expected_value = 134.492
     births = []
     for seed in range(500):
-        np.random.seed(seed)
+        generator = np.random.default_rng(seed)
         number_of_repetitions = 1_000
         births.append(
-            sum(hphp.simulation.birth(age=25) for _ in range(number_of_repetitions))
+            sum(
+                hphp.simulation.birth(age=25, generator=generator)
+                for _ in range(number_of_repetitions)
+            )
         )
     assert expected_value - 1 <= np.mean(births) <= expected_value + 1
 
@@ -156,7 +160,7 @@ def test_get_expected_difference_for_20_year_olds():
 
     counts = []
     for number_of_aces in range(4):
-        np.random.seed(0)
+        generator = np.random.default_rng(0)
         counts.append(
             sum(
                 hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
@@ -225,11 +229,11 @@ def test_get_expected_number_of_deaths_for_specific_25_year_olds():
     births = []
     for sex in ("Male", "Female"):
         for seed in range(500):
-            np.random.seed(seed)
+            generator = np.random.default_rng(seed)
             number_of_repetitions = 1_000
             births.append(
                 sum(
-                    hphp.simulation.death(age=25, sex=sex)
+                    hphp.simulation.death(age=25, sex=sex, generator=generator)
                     for _ in range(number_of_repetitions)
                 )
             )
@@ -241,11 +245,11 @@ def test_get_expected_number_of_deaths_for_specific_50_year_olds():
     births = []
     for expected_value, sex in zip(expected_values, ("Male", "Female")):
         for seed in range(500):
-            np.random.seed(seed)
+            generator = np.random.default_rng(seed)
             number_of_repetitions = 1_000
             births.append(
                 sum(
-                    hphp.simulation.death(age=50, sex=sex)
+                    hphp.simulation.death(age=50, sex=sex, generator=generator)
                     for _ in range(number_of_repetitions)
                 )
             )
@@ -255,15 +259,17 @@ def test_get_expected_number_of_deaths_for_specific_50_year_olds():
 
 
 def test_get_expected_number_of_deaths_for_specific_99_year_olds():
-    expected_values = (372.892, 356.631)
+    # Theoretical: 1000 * q(99) for males, then pooled with females,
+    # since `births` accumulates across both.
+    expected_values = (372.24, 356.045)
     births = []
     for expected_value, sex in zip(expected_values, ("Male", "Female")):
         for seed in range(500):
-            np.random.seed(seed)
+            generator = np.random.default_rng(seed)
             number_of_repetitions = 1_000
             births.append(
                 sum(
-                    hphp.simulation.death(age=99, sex=sex)
+                    hphp.simulation.death(age=99, sex=sex, generator=generator)
                     for _ in range(number_of_repetitions)
                 )
             )
@@ -277,11 +283,11 @@ def test_get_expected_number_of_deaths_for_specific_100_year_olds():
     births = []
     for sex in ("Male", "Female"):
         for seed in range(500):
-            np.random.seed(seed)
+            generator = np.random.default_rng(seed)
             number_of_repetitions = expected_value
             births.append(
                 sum(
-                    hphp.simulation.death(age=100, sex=sex)
+                    hphp.simulation.death(age=100, sex=sex, generator=generator)
                     for _ in range(number_of_repetitions)
                 )
             )
@@ -290,12 +296,13 @@ def test_get_expected_number_of_deaths_for_specific_100_year_olds():
 
 def test_sample_number_of_aces_for_total_group():
     repetitions = 10_000
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     number_of_aces_for_total_group = [
-        hphp.simulation.sample_number_of_aces(sex="Total") for _ in range(repetitions)
+        hphp.simulation.sample_number_of_aces(sex="Total", generator=generator)
+        for _ in range(repetitions)
     ]
-    expected_mean = 1.3451
-    expected_std = 1.533820716381155
+    expected_mean = 1.3625
+    expected_std = 1.5404849074236333
     expected_max = 8
     expected_min = 0
     mean = np.mean(number_of_aces_for_total_group)
@@ -310,12 +317,13 @@ def test_sample_number_of_aces_for_total_group():
 
 def test_number_of_aces_for_male_group():
     repetitions = 10_000
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     number_of_aces_for_total_group = [
-        hphp.simulation.sample_number_of_aces(sex="Male") for _ in range(repetitions)
+        hphp.simulation.sample_number_of_aces(sex="Male", generator=generator)
+        for _ in range(repetitions)
     ]
-    expected_mean = 1.218
-    expected_std = 1.4172071125985786
+    expected_mean = 1.2293
+    expected_std = 1.425735427770524
     expected_max = 8
     expected_min = 0
     mean = np.mean(number_of_aces_for_total_group)
@@ -330,12 +338,13 @@ def test_number_of_aces_for_male_group():
 
 def test_number_of_aces_for_female_group():
     repetitions = 10_000
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     number_of_aces_for_total_group = [
-        hphp.simulation.sample_number_of_aces(sex="Female") for _ in range(repetitions)
+        hphp.simulation.sample_number_of_aces(sex="Female", generator=generator)
+        for _ in range(repetitions)
     ]
-    expected_mean = 1.4829
-    expected_std = 1.6409471624644105
+    expected_mean = 1.4929
+    expected_std = 1.6496513540745512
     expected_max = 8
     expected_min = 0
     mean = np.mean(number_of_aces_for_total_group)
@@ -362,15 +371,15 @@ def test_individual():
 
 def test_uk_population_pyramid():
     repetitions = 10_000
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     ages = []
     number_of_male = 0
     for _ in range(repetitions):
-        age, sex = hphp.simulation.uk_population_pyramid()
+        age, sex = hphp.simulation.uk_population_pyramid(generator=generator)
         ages.append(age)
         number_of_male += sex == "Male"
-    expected_mean = 41.0012
-    expected_std = 23.66099741261978
+    expected_mean = 41.1285
+    expected_std = 23.727924219155792
     expected_max = 100
     expected_min = 0
     mean = np.mean(ages)
@@ -382,16 +391,17 @@ def test_uk_population_pyramid():
     assert np.isclose(expected_max, max)
     assert np.isclose(expected_min, min)
     male_to_female_ratio = number_of_male / (repetitions - number_of_male)
-    expected_male_to_female_ratio = (0.9657951641438962,)
+    expected_male_to_female_ratio = (0.9774569903104607,)
     assert np.isclose(male_to_female_ratio, expected_male_to_female_ratio)
 
 
 def test_get_population_with_uk_pyramid_population():
     number_of_individuals = 10_000
+    generator = np.random.default_rng(0)
     population = hphp.simulation.get_population(
         number_of_individuals=number_of_individuals,
         population_pyramid=hphp.simulation.uk_population_pyramid,
-        seed=0,
+        generator=generator,
     )
     assert len(population) == number_of_individuals
     ages = []
@@ -399,9 +409,8 @@ def test_get_population_with_uk_pyramid_population():
     for individual in population:
         ages.append(individual.age)
         number_of_male += individual.sex == "Male"
-    expected_mean = 41.1292
-    expected_std = 23.736172972069443
-    expected_max = 100
+    expected_mean = 41.4405
+    expected_std = 23.745901956969334
     expected_min = 0
     mean = np.mean(ages)
     std = np.std(ages)
@@ -410,28 +419,31 @@ def test_get_population_with_uk_pyramid_population():
 
     assert np.isclose(expected_mean, mean)
     assert np.isclose(expected_std, std)
-    assert np.isclose(expected_max, max)
     assert np.isclose(expected_min, min)
+    # The oldest age group carries probability 0.00035, so whether a sample of
+    # this size contains a centenarian is a property of the draw, not of the
+    # code. The invariant is that no age falls outside the pyramid.
+    assert max <= 100
 
     male_to_female_ratio = number_of_male / (number_of_individuals - number_of_male)
-    expected_male_to_female_ratio = 0.9860973187686196
+    expected_male_to_female_ratio = 0.9665683382497542
     assert np.isclose(male_to_female_ratio, expected_male_to_female_ratio)
 
 
 def test_sample_intergenerational_number_of_aces():
     numbers_of_maternal_aces = range(9)
     expected_mean_number_of_aces = (
-        1.248,
-        1.64,
-        2.053,
-        1.893,
-        2.383,
-        2.456,
-        2.39,
-        2.482,
+        1.31,
+        1.442,
+        1.983,
+        1.932,
+        2.606,
+        2.453,
+        2.408,
+        2.565,
     )
     repetitions = 1_000
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     for number_of_maternal_aces, expected_mean in zip(
         numbers_of_maternal_aces, expected_mean_number_of_aces
     ):
@@ -440,7 +452,8 @@ def test_sample_intergenerational_number_of_aces():
             np.mean(
                 [
                     hphp.simulation.sample_intergenerational_number_of_aces(
-                        number_of_maternal_aces=number_of_maternal_aces
+                        number_of_maternal_aces=number_of_maternal_aces,
+                        generator=generator,
                     )
                     for _ in range(repetitions)
                 ]
@@ -515,7 +528,7 @@ def test_children_never_heal():
     fall-through from the trauma branch into the healing branch to go
     unnoticed.
     """
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     repetitions = 20_000
     individual = hphp.simulation.Individual(
             sex="Female",
@@ -540,7 +553,7 @@ def test_children_never_heal():
 
 def test_adults_heal_at_the_healing_probability():
     """An adult is unaffected by the trauma probability."""
-    np.random.seed(0)
+    generator = np.random.default_rng(0)
     repetitions = 20_000
     individual = hphp.simulation.Individual(
             sex="Female",
@@ -623,3 +636,156 @@ def _birth_probability(age, number_of_aces, childhood_number_of_aces, alpha=1.0)
     if number_of_aces >= 1:
         probability = min(1.0, alpha * probability)
     return probability
+
+
+def _population(number_of_aces_by_individual, age=25):
+    return [
+        hphp.simulation.Individual(
+            sex="Female",
+            age=age,
+            number_of_aces=number_of_aces,
+            childhood_number_of_aces=number_of_aces,
+        )
+        for number_of_aces in number_of_aces_by_individual
+    ]
+
+
+def test_mean_fertility_multiplier_when_nobody_is_exposed():
+    population = _population([0, 0, 0, 0])
+    multiplier = hphp.simulation.mean_fertility_multiplier(
+        population, alpha=1.35, pace_increase_per_ace=0.3142
+    )
+    assert multiplier == pytest.approx(1.0)
+
+
+def test_mean_fertility_multiplier_when_everyone_is_exposed():
+    population = _population([1, 2, 3, 4])
+    multiplier = hphp.simulation.mean_fertility_multiplier(
+        population, alpha=1.35, pace_increase_per_ace=0.3142
+    )
+    assert multiplier == pytest.approx(1.35)
+
+
+def test_mean_fertility_multiplier_lies_between_the_two():
+    population = _population([0, 0, 1, 1])
+    multiplier = hphp.simulation.mean_fertility_multiplier(
+        population, alpha=1.35, pace_increase_per_ace=0.3142
+    )
+    assert 1.0 < multiplier < 1.35
+
+
+def test_mean_fertility_multiplier_ignores_the_infertile():
+    """Only individuals who can actually give birth carry weight."""
+    fertile = _population([1, 1], age=25)
+    with_children = fertile + _population([0, 0], age=5)
+    assert hphp.simulation.mean_fertility_multiplier(
+        with_children, alpha=1.35, pace_increase_per_ace=0.3142
+    ) == pytest.approx(
+        hphp.simulation.mean_fertility_multiplier(
+            fertile, alpha=1.35, pace_increase_per_ace=0.3142
+        )
+    )
+
+
+def test_normalisation_conserves_expected_births():
+    """
+    Normalising must leave the total expected births unchanged from the
+    alpha = 1 case, redistributing them rather than adding any.
+    """
+    population = _population([0, 0, 1, 2, 4], age=25)
+    alpha = 1.4
+    pace = 0.3142
+
+    unexposed_total = sum(
+        hphp.birth_death.fertility(
+            age=person.age,
+            childhood_number_of_aces=person.childhood_number_of_aces,
+            pace_increase_per_ace=pace,
+        )
+        for person in population
+    )
+
+    normaliser = hphp.simulation.mean_fertility_multiplier(population, alpha, pace)
+    normalised_total = 0.0
+    for person in population:
+        baseline = hphp.birth_death.fertility(
+            age=person.age,
+            childhood_number_of_aces=person.childhood_number_of_aces,
+            pace_increase_per_ace=pace,
+        )
+        multiplier = alpha if person.number_of_aces >= 1 else 1.0
+        normalised_total += baseline * multiplier / normaliser
+
+    assert normalised_total == pytest.approx(unexposed_total)
+
+
+def test_normalisation_preserves_the_relative_advantage():
+    """
+    Exposed individuals must still out-reproduce unexposed ones by exactly
+    alpha.
+
+    Both individuals here share a childhood ACE count, so they share a
+    life-history pace and therefore a baseline fertility; they differ only in
+    their current count, which is what the quantum multiplier reads. Comparing
+    individuals with different childhood counts would confound the quantum
+    effect with the tempo effect.
+    """
+    alpha = 1.4
+    pace = 0.3142
+    healed = hphp.simulation.Individual(
+        sex="Female", age=25, number_of_aces=0, childhood_number_of_aces=2
+    )
+    exposed = hphp.simulation.Individual(
+        sex="Female", age=25, number_of_aces=2, childhood_number_of_aces=2
+    )
+    population = [healed, exposed]
+    normaliser = hphp.simulation.mean_fertility_multiplier(population, alpha, pace)
+
+    probabilities = []
+    for person in population:
+        baseline = hphp.birth_death.fertility(
+            age=person.age,
+            childhood_number_of_aces=person.childhood_number_of_aces,
+            pace_increase_per_ace=pace,
+        )
+        multiplier = alpha if person.number_of_aces >= 1 else 1.0
+        probabilities.append(baseline * multiplier / normaliser)
+
+    assert probabilities[1] / probabilities[0] == pytest.approx(alpha)
+
+
+def test_normalisation_decouples_growth_from_alpha():
+    """
+    Population growth must be far less sensitive to alpha once fertility is
+    normalised.
+
+    The comparison is made against the unnormalised model rather than against
+    an absolute tolerance, because the residual spread is sampling noise whose
+    size depends on the population and the number of replicates.
+    """
+
+    def growth_rate(alpha, normalise):
+        generator = np.random.default_rng(11)
+        initial = hphp.simulation.get_population(
+            2000, hphp.simulation.uk_population_pyramid, generator=generator
+        )
+        history = hphp.simulation.simulate(
+            number_of_years=120,
+            initial_population=initial,
+            probability_of_male_birth=0.51,
+            alpha=alpha,
+            probability_of_heal=0.0,
+            probability_of_trauma=0.0,
+            generator=generator,
+            normalise_fertility=normalise,
+        )
+        return np.log(len(history[120]) / len(history[80])) / 40
+
+    unnormalised_spread = abs(
+        growth_rate(1.50, normalise=False) - growth_rate(1.05, normalise=False)
+    )
+    normalised_spread = abs(
+        growth_rate(1.50, normalise=True) - growth_rate(1.05, normalise=True)
+    )
+
+    assert normalised_spread < unnormalised_spread / 3

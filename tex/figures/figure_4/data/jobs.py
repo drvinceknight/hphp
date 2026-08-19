@@ -9,6 +9,8 @@ colliding directory names, and runs then silently overwrite one another.
 Completed combinations are recorded by `stet`, so the full list can be piped to
 a runner repeatedly and only the outstanding work is done. Delete the store
 whenever the model or an unswept setting changes.
+
+Every run is seeded explicitly, so the sweep reproduces exactly.
 """
 
 import itertools
@@ -16,6 +18,12 @@ import itertools
 REPETITIONS = 50
 YEARS = 200
 INITIAL_POPULATION_SIZE = 10_000
+
+# Each combination gets its own block of seeds, so that the sweep is
+# reproducible and no two combinations share a random stream. `main.py` uses
+# seeds `seed`, `seed + 1`, ..., `seed + REPETITIONS - 1`, so blocks are spaced
+# by REPETITIONS to keep them disjoint.
+SEED_BASE = 1_000_000
 
 # Healing probability: 0.00 to 0.60 in steps of 0.01.
 HEAL_PROBABILITIES = [round(0.01 * i, 2) for i in range(61)]
@@ -43,7 +51,8 @@ def main():
             "would make runs overwrite each other."
         )
 
-    for trauma, heal, alpha in combinations:
+    for index, (trauma, heal, alpha) in enumerate(combinations):
+        seed = SEED_BASE + index * REPETITIONS
         print(
             f"uv run main.py"
             f" --repetitions {REPETITIONS}"
@@ -52,6 +61,7 @@ def main():
             f" --probability_of_trauma {trauma:.02f}"
             f" --probability_of_heal {heal:.02f}"
             f" --alpha {alpha:.02f}"
+            f" --seed {seed}"
         )
 
 

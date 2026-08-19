@@ -174,10 +174,16 @@ def main():
         for rep in range(args.repetitions):
             seed = None if args.seed is None else args.seed + rep
 
+            # One generator per replicate, shared between building the
+            # initial population and running the simulation, so that the two
+            # draw from a single continuous stream rather than restarting the
+            # same one twice.
+            generator = np.random.default_rng(seed)
+
             initial_population = sim.get_population(
                 number_of_individuals=args.initial_population_size,
                 population_pyramid=sim.uk_population_pyramid,
-                seed=seed,
+                generator=generator,
             )
 
             history = sim.simulate(
@@ -187,7 +193,7 @@ def main():
                 alpha=args.alpha,
                 probability_of_heal=args.probability_of_heal,
                 probability_of_trauma=args.probability_of_trauma,
-                seed=seed,
+                generator=generator,
             )
 
             for year, population in enumerate(history):

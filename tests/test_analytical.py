@@ -3,7 +3,7 @@ import pytest
 
 import hphp.analytical
 
-# ── get_x_T_prime ─────────────────────────────────────────────────────────────
+# get_x_T_prime
 
 def test_get_x_T_prime_fixed_point():
     """x* should be a fixed point of the map."""
@@ -41,7 +41,7 @@ def test_get_x_T_prime_alpha_one_boundary():
     assert 0.0 <= result <= 1.0
 
 
-# ── simulation ────────────────────────────────────────────────────────────────
+# simulation
 
 def test_simulation_generator_length():
     """Generator yields number_of_iterations + 1 values."""
@@ -68,7 +68,7 @@ def test_simulation_convergence():
     assert np.isclose(low[-1],  x_star, atol=1e-4)
 
 
-# ── x_star_equilibrium ────────────────────────────────────────────────────────
+# x_star_equilibrium
 
 def test_x_star_no_influx_no_healing_below_threshold():
     """p=0, α*(1-q) <= 1 => x*=0."""
@@ -97,7 +97,7 @@ def test_x_star_is_fixed_point():
         assert np.isclose(g_val, x_star, atol=1e-7), (alpha, p, q, x_star)
 
 
-# ── find_roots_on_unit_interval ───────────────────────────────────────────────
+# find_roots_on_unit_interval
 
 def test_find_roots_recovers_known_root():
     """f(x) = x - 0.3 has a root at 0.3."""
@@ -137,7 +137,7 @@ def test_find_roots_matches_x_star():
     assert any(np.isclose(r, x_star, atol=1e-4) for r in roots)
 
 
-# ── is_stable_equilibrium ─────────────────────────────────────────────────────
+# is_stable_equilibrium
 
 def test_is_stable_equilibrium_stable():
     """x* for (α=1.1, p=0.05, q=0.07) should be stable."""
