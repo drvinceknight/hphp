@@ -362,7 +362,7 @@ def test_individual():
             sex="Male",
             age=21,
             number_of_aces=3,
-            childhood_number_of_aces=3,
+            completed_number_of_aces=3,
         )
     assert individual.sex == "Male"
     assert individual.age == 21
@@ -470,7 +470,7 @@ def test_adjust_aces_with_no_probability():
             sex="Male",
             age=np.random.randint(0, 100),
             number_of_aces=3,
-            childhood_number_of_aces=3,
+            completed_number_of_aces=3,
         )
         delta = hphp.simulation.adjust_aces(
             individual,
@@ -489,7 +489,7 @@ def test_adjust_aces_for_children():
             sex="Male",
             age=np.random.randint(0, 18),
             number_of_aces=3,
-            childhood_number_of_aces=3,
+            completed_number_of_aces=3,
         )
         delta = hphp.simulation.adjust_aces(
             individual,
@@ -508,7 +508,7 @@ def test_adjust_aces_for_adults():
             sex="Male",
             age=np.random.randint(18, 100),
             number_of_aces=3,
-            childhood_number_of_aces=3,
+            completed_number_of_aces=3,
         )
         delta = hphp.simulation.adjust_aces(
             individual,
@@ -534,7 +534,7 @@ def test_children_never_heal():
             sex="Female",
             age=10,
             number_of_aces=4,
-            childhood_number_of_aces=4,
+            completed_number_of_aces=4,
         )
 
     deltas = [
@@ -559,7 +559,7 @@ def test_adults_heal_at_the_healing_probability():
             sex="Female",
             age=30,
             number_of_aces=4,
-            childhood_number_of_aces=4,
+            completed_number_of_aces=4,
         )
 
     deltas = [
@@ -599,17 +599,17 @@ def test_healing_does_not_reopen_fertility():
     """
     age = 30
     probability_before_healing = _birth_probability(
-        age=age, number_of_aces=8, childhood_number_of_aces=8
+        age=age, number_of_aces=8, completed_number_of_aces=8
     )
     probability_after_healing = _birth_probability(
-        age=age, number_of_aces=2, childhood_number_of_aces=8
+        age=age, number_of_aces=2, completed_number_of_aces=8
     )
     assert probability_before_healing == 0.0
     assert probability_after_healing == 0.0
 
     # Recomputing the pace from the current count is what reopens the window.
     if_pace_followed_healing = _birth_probability(
-        age=age, number_of_aces=2, childhood_number_of_aces=2
+        age=age, number_of_aces=2, completed_number_of_aces=2
     )
     assert if_pace_followed_healing > 0.0
 
@@ -618,19 +618,19 @@ def test_healing_still_removes_the_quantum_advantage():
     """Recovery must keep acting on fertility intensity."""
     age = 20
     with_aces = _birth_probability(
-        age=age, number_of_aces=4, childhood_number_of_aces=4, alpha=1.5
+        age=age, number_of_aces=4, completed_number_of_aces=4, alpha=1.5
     )
     healed = _birth_probability(
-        age=age, number_of_aces=0, childhood_number_of_aces=4, alpha=1.5
+        age=age, number_of_aces=0, completed_number_of_aces=4, alpha=1.5
     )
     assert with_aces > healed > 0.0
 
 
-def _birth_probability(age, number_of_aces, childhood_number_of_aces, alpha=1.0):
+def _birth_probability(age, number_of_aces, completed_number_of_aces, alpha=1.0):
     """The birth probability `birth` samples against, computed directly."""
-    pace = hphp.birth_death.life_history_pace(childhood_number_of_aces)
+    pace = hphp.birth_death.life_history_pace(completed_number_of_aces)
     effective_age = hphp.birth_death.adjust_age_for_aces(
-        age=age, number_of_aces=childhood_number_of_aces
+        age=age, number_of_aces=completed_number_of_aces
     )
     probability = pace * hphp.birth_death.baseline_birth_probability(effective_age)
     if number_of_aces >= 1:
@@ -644,7 +644,7 @@ def _population(number_of_aces_by_individual, age=25):
             sex="Female",
             age=age,
             number_of_aces=number_of_aces,
-            childhood_number_of_aces=number_of_aces,
+            completed_number_of_aces=number_of_aces,
         )
         for number_of_aces in number_of_aces_by_individual
     ]
@@ -699,7 +699,7 @@ def test_normalisation_conserves_expected_births():
     unexposed_total = sum(
         hphp.birth_death.fertility(
             age=person.age,
-            childhood_number_of_aces=person.childhood_number_of_aces,
+            completed_number_of_aces=person.completed_number_of_aces,
             pace_increase_per_ace=pace,
         )
         for person in population
@@ -710,7 +710,7 @@ def test_normalisation_conserves_expected_births():
     for person in population:
         baseline = hphp.birth_death.fertility(
             age=person.age,
-            childhood_number_of_aces=person.childhood_number_of_aces,
+            completed_number_of_aces=person.completed_number_of_aces,
             pace_increase_per_ace=pace,
         )
         multiplier = alpha if person.number_of_aces >= 1 else 1.0
@@ -733,10 +733,10 @@ def test_normalisation_preserves_the_relative_advantage():
     alpha = 1.4
     pace = 0.3142
     healed = hphp.simulation.Individual(
-        sex="Female", age=25, number_of_aces=0, childhood_number_of_aces=2
+        sex="Female", age=25, number_of_aces=0, completed_number_of_aces=2
     )
     exposed = hphp.simulation.Individual(
-        sex="Female", age=25, number_of_aces=2, childhood_number_of_aces=2
+        sex="Female", age=25, number_of_aces=2, completed_number_of_aces=2
     )
     population = [healed, exposed]
     normaliser = hphp.simulation.mean_fertility_multiplier(population, alpha, pace)
@@ -745,7 +745,7 @@ def test_normalisation_preserves_the_relative_advantage():
     for person in population:
         baseline = hphp.birth_death.fertility(
             age=person.age,
-            childhood_number_of_aces=person.childhood_number_of_aces,
+            completed_number_of_aces=person.completed_number_of_aces,
             pace_increase_per_ace=pace,
         )
         multiplier = alpha if person.number_of_aces >= 1 else 1.0

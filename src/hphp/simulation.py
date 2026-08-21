@@ -38,7 +38,7 @@ def mean_fertility_multiplier(
             continue
         baseline = birth_death.fertility(
             age=individual.age,
-            childhood_number_of_aces=individual.childhood_number_of_aces,
+            completed_number_of_aces=individual.completed_number_of_aces,
             pace_increase_per_ace=pace_increase_per_ace,
         )
         if baseline == 0.0:
@@ -153,7 +153,7 @@ def simulate(
                     number_of_aces=individual.number_of_aces,
                     alpha=alpha,
                     pace_increase_per_ace=pace_increase_per_ace,
-                    childhood_number_of_aces=individual.childhood_number_of_aces,
+                    completed_number_of_aces=individual.completed_number_of_aces,
                     mean_fertility_multiplier=normaliser,
                     generator=generator,
                 )
@@ -173,7 +173,7 @@ def simulate(
                         sex=sex,
                         number_of_aces=number_of_aces,
                         age=0,
-                        childhood_number_of_aces=number_of_aces,
+                        completed_number_of_aces=number_of_aces,
                     )
                 )
 
@@ -195,17 +195,17 @@ def simulate(
                 # Childhood adversity is still accumulating below 18; from 18
                 # onwards it is frozen, so that the life-history pace it sets
                 # is not undone by later healing.
-                childhood_number_of_aces = (
+                completed_number_of_aces = (
                     new_number_of_aces
                     if new_age < 18
-                    else individual.childhood_number_of_aces
+                    else individual.completed_number_of_aces
                 )
                 population.append(
                     Individual(
                         age=new_age,
                         sex=sex,
                         number_of_aces=new_number_of_aces,
-                        childhood_number_of_aces=childhood_number_of_aces,
+                        completed_number_of_aces=completed_number_of_aces,
                     )
                 )
 
@@ -241,7 +241,7 @@ def get_population(
                 age=age,
                 sex=sex,
                 number_of_aces=number_of_aces,
-                childhood_number_of_aces=number_of_aces,
+                completed_number_of_aces=number_of_aces,
             )
         )
     return individuals

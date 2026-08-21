@@ -397,7 +397,7 @@ def adjust_age_for_aces(
 
 def fertility(
     age: int,
-    childhood_number_of_aces: int,
+    completed_number_of_aces: int,
     pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
 ) -> float:
     """
@@ -409,10 +409,10 @@ def fertility(
     """
     if age < YOUNGEST_FERTILE_AGE:
         return 0.0
-    pace = life_history_pace(childhood_number_of_aces, pace_increase_per_ace)
+    pace = life_history_pace(completed_number_of_aces, pace_increase_per_ace)
     effective_age = adjust_age_for_aces(
         age=age,
-        number_of_aces=childhood_number_of_aces,
+        number_of_aces=completed_number_of_aces,
         pace_increase_per_ace=pace_increase_per_ace,
     )
     return pace * baseline_birth_probability(effective_age)
@@ -423,7 +423,7 @@ def birth(
     number_of_aces: int = 0,
     alpha: float = 1.0,
     pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
-    childhood_number_of_aces: int | None = None,
+    completed_number_of_aces: int | None = None,
     mean_fertility_multiplier: float = 1.0,
     generator: np.random.Generator | None = None,
 ) -> bool:
@@ -452,7 +452,7 @@ def birth(
         exposed and unexposed individuals rather than raising it overall.
         This is the normalisation the replicator dynamic performs when it
         divides by mean fitness. A value of 1.0 leaves fertility unnormalised.
-    childhood_number_of_aces : int or None
+    completed_number_of_aces : int or None
         ACE count at the end of childhood, which sets the life-history pace.
         Defaults to `number_of_aces`. The tempo effect uses this while the
         quantum effect uses the current count, so that recovery changes how
@@ -470,11 +470,11 @@ def birth(
     # pace, so that completed fertility is unchanged and only its timing moves.
     # The pace is fixed by childhood adversity; recomputing it from the current
     # count would let healing move an individual back onto the schedule.
-    if childhood_number_of_aces is None:
-        childhood_number_of_aces = number_of_aces
+    if completed_number_of_aces is None:
+        completed_number_of_aces = number_of_aces
     probability = fertility(
         age=age,
-        childhood_number_of_aces=childhood_number_of_aces,
+        completed_number_of_aces=completed_number_of_aces,
         pace_increase_per_ace=pace_increase_per_ace,
     )
 
