@@ -72,13 +72,14 @@ fertility patterns \cite{williams2019adverse}. Population prevalence is therefor
 shaped by the interplay between transmission, demographic processes, and recovery.
 
 No theoretical framework yet links these mechanisms to the long-term population
-dynamics of trauma. Existing studies focus either on individual outcomes---documenting
-associations between ACE exposure and adult health risk
-\cite{felitti1998relationship}, synthesising dose--response relationships
-\cite{hughes2017effect}, or characterising developmental consequences of early
-toxic stress \cite{shonkoff2012lifelong}---or on statistical correlations across
-cohorts, such as ACE prevalence estimates \cite{joshi2021prevalence} or
-intergenerational transmission rates \cite{madigan2019intergenerational}.
+dynamics of trauma. Existing studies focus either on individual outcomes or on
+statistical correlations across cohorts. The first group documents associations
+between ACE exposure and adult health risk \cite{felitti1998relationship},
+synthesises dose--response relationships \cite{hughes2017effect}, and
+characterises developmental consequences of early toxic stress
+\cite{shonkoff2012lifelong}. The second reports ACE prevalence estimates
+\cite{joshi2021prevalence} and intergenerational transmission rates
+\cite{madigan2019intergenerational}.
 Neither approach addresses how trauma prevalence evolves over long time horizons
 or responds to structural interventions. Population modelling has proven useful
 for linking demographic processes to long-run outcomes \cite{caswell2001matrix},
@@ -104,8 +105,8 @@ Figure~\ref{fig:framework-overview}.
 \centering
     \includegraphics[width=\textwidth]{./figures/figure_1/main.pdf}
 \caption{\textbf{Core model structure and simulation algorithm.}
-\textbf{(A)} Individuals occupy one of two adversity states, \(S\) (lower adversity) or \(T\)
-(higher adversity), shown for two successive generations.
+\textbf{A}, Individuals occupy one of two adversity states, \(S\) (lower
+adversity) or \(T\) (higher adversity), shown for two successive generations.
 Within each generation, individuals transition from \(S\) to \(T\) with probability
 \(p\) (exposure) and from \(T\) to \(S\) with probability \(q\) (healing).
 Across generations, \(T\)-state individuals reproduce at rate \(\alpha f_S\)
@@ -116,29 +117,32 @@ Adversity propagates intergenerationally via behavioural, socioeconomic, and
 biological pathways.
 The product \(\alpha(1-q)\) acts as a demographic analogue of \(R_0\): endemic
 trauma persists whenever \(\alpha(1-q)>1\).
-\textbf{(B)} Flowchart of the individual-based simulation.
+\textbf{B}, Flowchart of the individual-based simulation.
 At each annual step the three processes act sequentially on every member of
 the population denoted as \(\mathcal{P}_t\).
-\emph{Reproduction}: surviving females may give birth with probability
-\(b(a,k)\), which combines a tempo effect---shifting the baseline schedule
-earlier by \(\tau\) years per ACE via effective age \(\tilde{a}=a-\tau k\)---and
-a quantum effect---scaling the shifted probability by \(\alpha\) for individuals
-with \(k\geq 1\) ACEs.
+\emph{Reproduction}, resolved first: females may give birth with probability
+\(b(a,k)\), which combines a tempo effect, rescaling the baseline schedule
+about the youngest fertile age by the life-history pace
+\(\pi(\bar{k})=1+\gamma\bar{k}\) via effective age
+\(\tilde{a}=15+(a-15)\pi(\bar{k})\), and a quantum effect, scaling the rescaled
+probability by \(\alpha\) for individuals with \(k\geq 1\) ACEs and normalising
+by the population mean multiplier.
 Each newborn is assigned a sex \(s'\) drawn from a Bernoulli with parameter
 \(p_{\mathrm{m}}\) and an ACE count \(k'\) drawn from the empirical
 intergenerational conditional distribution \(\Pr(k'\mid k)\).
-\emph{ACE adjustment}: a surviving child (\(a<18\)) acquires one additional
-ACE with probability \(p\) (trauma exposure); a surviving adult (\(a\geq 18\))
-loses one ACE with probability \(q\) (healing).
-\emph{Mortality}: each individual dies independently with the age- and
-sex-specific probability \(\mu(s,a)\) taken from UN life tables; those who
-die are excluded from \(\mathcal{P}_{t+1}\).
+\emph{Mortality}, resolved second: each individual dies independently with the
+age- and sex-specific probability \(\mu(s,a)\) taken from UN life tables; those
+who die are excluded from \(\mathcal{P}_{t+1}\).
+\emph{ACE adjustment}, applied to survivors: a child (\(a<18\)) acquires one
+additional ACE with probability \(p\) (trauma exposure); an adult
+(\(a\geq 18\)) loses one ACE with probability \(q\) (healing).
 All survivors (with age incremented by one and ACE count updated) and all
 newborns are collected into \(\mathcal{P}_{t+1}\).}
 \label{fig:framework-overview}
 \end{figure}
 
 \section{Methods}
+\label{sec:methods}
 
 \subsection{Analytical model}
 
@@ -163,7 +167,7 @@ two parameters:
 
 Together, \(\alpha\), \(p\), and \(q\) determine the balance between
 transmission, recovery, and differential reproduction, and hence whether trauma
-prevalence grows, declines, or stabilises over time (Fig.~\ref{fig:trauma-dynamics}A).
+prevalence grows, declines, or stabilises over time (Figure~\ref{fig:trauma-dynamics}A).
 
 \begin{figure}[!hbtp]
     \centering
@@ -235,7 +239,7 @@ Because the constant term equals \(-p<0\) while evaluation at
 \((0,1)\) whenever \(p,q>0\).
 This root defines the endemic level \(x_T^*\), showing that any
 persistent introduction of trauma produces a stable long-run
-prevalence (Fig.~\ref{fig:trauma-dynamics}A).
+prevalence (Figure~\ref{fig:trauma-dynamics}A).
 
 When no new trauma is introduced (\(p=0\)), persistence depends on invasion
 from rarity. Taking the limit \(x_T\to0\) gives
@@ -249,7 +253,7 @@ so trauma spreads from low prevalence precisely when
 q<1-\frac{1}{\alpha}.
 \]
 This condition acts as a demographic threshold separating extinction from
-endemic persistence, shown in Fig.~\ref{fig:trauma-dynamics}C.
+endemic persistence, shown in Figure~\ref{fig:trauma-dynamics}C.
 
 \medskip
 
@@ -273,63 +277,124 @@ simulation of the same mechanisms.
 
 \subsection*{Individual state and population dynamics}
 
-Each individual is characterised by a triple \((s, a, k)\) denoting sex
-\(s \in \{\text{M}, \text{F}\}\), integer age \(a \geq 0\), and ACE count
-\(k \in \{0, 1, \dots, 8\}\).  The population at time \(t\) is the multiset
-\(\mathcal{P}_t = \{(s_i, a_i, k_i)\}_{i=1}^{N_t}\), where \(N_t\) is the
-(stochastic) population size.  The model evolves in discrete yearly steps; in
-each step three processes act sequentially on every individual: mortality,
-reproduction, and within-life ACE adjustment.
+Each individual is characterised by \((s, a, k, \bar{k})\) denoting sex
+\(s \in \{\text{M}, \text{F}\}\), integer age \(a \geq 0\), current ACE count
+\(k \in \{0, 1, \dots, 8\}\), and the count accumulated by the end of childhood
+\(\bar{k} \geq k\), which is fixed from age 18 onwards.  The population at time
+\(t\) is the multiset
+\(\mathcal{P}_t = \{(s_i, a_i, k_i, \bar{k}_i)\}_{i=1}^{N_t}\), where \(N_t\) is
+the (stochastic) population size.  The model evolves in discrete yearly steps;
+in each step three processes act sequentially on every individual:
+reproduction, mortality, and within-life ACE adjustment.  Reproduction precedes
+mortality, so an individual who dies during year \(t\) may still give birth in
+that year.
 
 \subsection*{Mortality}
 
-Each individual \((s, a, k)\) dies in year \(t\) with probability \(\mu(s, a)\),
+Each individual dies in year \(t\) with probability \(\mu(s, a)\),
 drawn from age- and sex-specific life-table values based on UN World Population
 Prospects data \cite{un_wpp_mortality}.  Mortality is assumed independent of
 ACE count, so demographic selection operates exclusively through fertility.
 
 \subsection*{Fertility and ACE transmission}
 
-Reproduction is restricted to surviving females.  The baseline probability of a
-birth in a given year for a female of age \(a\) is \(b_0(a)\), taken from UN
+Reproduction is restricted to females and is resolved before mortality, so a
+female who dies during the year may still give birth in it.  The baseline
+probability of a birth in a given year for a female of age \(a\) is
+\(b_0(a)\), taken from UN
 age-specific fertility schedules \cite{un_wpp_fertility}.  Two empirically
 motivated mechanisms modify this baseline for ACE-exposed individuals.
 
-\paragraph{Tempo effect (earlier reproductive timing).}
+\subsubsection*{Tempo effect (earlier reproductive timing)}
 Consistent with evidence that adversity is associated with accelerated
 life-history strategies and earlier age at first birth
 \cite{williams2019adverse}, the fertility schedule is shifted earlier in
-proportion to ACE exposure.  Specifically, a female with \(k \geq 1\) ACEs
-evaluates her birth probability at an effective age
-\[
-    \tilde{a} = a - \tau k,
-\]
-where \(\tau > 0\) is the tempo parameter (years of schedule shift per ACE).
-Empirical estimates suggest \(\tau \approx 3\)
-\cite{williams2019adverse}, which is used here.
-This implements a purely timing adjustment: completed fertility is unaffected
-in the absence of the quantum mechanism described below.
+proportion to ACE exposure.
 
-\paragraph{Quantum effect (differential reproductive intensity).}
+We distinguish two counts.  Write \(k\) for an individual's current ACE count,
+which healing reduces, and \(\bar{k}\) for the count accumulated by the end of
+childhood.  Since healing acts only on adults, \(\bar{k}\) is the total an
+individual was ever exposed to and is fixed from age 18 onwards, while
+\(k \leq \bar{k}\) is what remains after any recovery.  The tempo effect reads
+\(\bar{k}\) and the quantum effect reads \(k\).
+
+A female then evaluates her birth probability at an effective age
+\[
+    \tilde{a} = a_0 + (a - a_0)\,\pi(\bar{k}),
+    \qquad
+    \pi(\bar{k}) = 1 + \gamma \bar{k},
+\]
+where \(a_0 = 15\) is the youngest age in the fertility schedule and
+\(\pi(\bar{k})\) is the \emph{life-history pace}.  The birth probability is
+scaled by the same factor,
+\(b(a,k) \propto \pi(\bar{k})\, b_0(\tilde{a})\), so that the schedule is
+compressed rather than translated and completed fertility is preserved.
+
+We use \(\bar{k}\) rather than \(k\) here because life-history pace is
+calibrated during development \cite{ellis2009fundamental} and is not reset by
+later recovery.  Reading the current count instead would allow an individual
+who had aged out of her compressed fertile window to re-enter it by healing,
+so that recovery manufactured fertility rather than retiming it.
+We set \(\gamma = 0.314\), calibrated so that a single ACE lowers the mean age
+at childbearing by three years, matching the estimate of Williams and Cheadle
+\cite{williams2019adverse}.
+We rescale rather than translate because a rigid shift of an age-bounded
+schedule moves the fertile window below \(a_0\), and for large \(k\) pushes it
+off the schedule entirely, which destroys completed fertility and produces
+implausible ages at birth.  Under rescaling the shift in mean age at
+childbearing saturates on its own, from three years at \(\bar{k}=1\) to nine
+years at \(\bar{k}=8\), so no cap is required.
+This implements a purely timing adjustment: the expected number of births over
+a full reproductive span is unchanged to within 0.2\% across \(\bar{k}\).  Net
+reproduction, which weights each birth by the probability of surviving to that
+age, rises slightly (2.1\% at \(\bar{k}=8\)) because earlier childbearing is
+less discounted by mortality.  This is a demographic consequence of the timing
+shift rather than an additional fertility mechanism, and its size depends on
+the mortality schedule.
+The resulting schedules are shown in Figure~\ref{fig:model-specification}A,
+and their consequences for the timing and the total of reproduction in
+Figure~\ref{fig:model-specification}B.
+
+\subsubsection*{Quantum effect (differential reproductive intensity)}
 Conditional on effective age \(\tilde{a}\), the birth probability of a female
 with \(k \geq 1\) ACEs is scaled by a multiplicative factor \(\alpha > 1\):
 \[
     b(a, k) =
+    \frac{\pi(\bar{k})\, b_0(\tilde{a})}{\bar{\alpha}}
+    \times
     \begin{cases}
-        b_0(\tilde{a})          & \text{if } k = 0, \\
-        \min\!\bigl(1,\, \alpha\, b_0(\tilde{a})\bigr) & \text{if } k \geq 1.
+        1      & \text{if } k = 0, \\
+        \alpha & \text{if } k \geq 1,
     \end{cases}
 \]
+where \(\bar{\alpha}\) is the population mean multiplier, weighted by the
+fertility each individual would have at \(\alpha = 1\),
+\[
+    \bar{\alpha}
+    = \frac{\sum_i \pi(\bar{k}_i)\, b_0(\tilde{a}_i)\,
+            \alpha^{\mathbf{1}[k_i \geq 1]}}
+           {\sum_i \pi(\bar{k}_i)\, b_0(\tilde{a}_i)},
+\]
+summed over females.  Dividing by \(\bar{\alpha}\) holds the total expected
+number of births at its \(\alpha = 1\) value, so that \(\alpha\) redistributes
+reproduction towards exposed individuals rather than raising it for the
+population as a whole, while the ratio between the two groups remains exactly
+\(\alpha\) (Figure~\ref{fig:model-specification}C).  This is the normalisation
+the replicator dynamic of Section~\ref{sec:methods} performs when it divides by
+mean fitness \(\bar f\); without it, raising \(\alpha\) would raise the
+population growth rate as well as the relative standing of the exposed, and the
+two models would not share a parameter.
 Under a coarse-grained binary classification (ACE-free versus ACE-exposed),
 this corresponds directly to the relative fitness parameter of the analytical
 model, in which \(f_T = \alpha f_S\).  The simulation therefore embeds the
 replicator structure of the analytical model within an age-structured,
 stochastic demographic framework.
 
-\paragraph{Intergenerational ACE transmission.}
+\subsubsection*{Intergenerational ACE transmission}
 The ACE count of each newborn is drawn from an empirically estimated
 conditional distribution \(\Pr(k_{\text{child}} \mid k_{\text{mother}})\), based
-on reported intergenerational ACE correlations \cite{intergenerational_aces}.
+on reported intergenerational ACE correlations
+\cite{schickedanz2021intergenerational}.
 Denoting the four maternal exposure categories as \(\{0, 1, 2\text{--}3,
 \geq 4\}\), the conditional probabilities are summarised in
 Table~\ref{tab:intergenerational}.  Offspring ACE counts in the range
@@ -387,6 +452,52 @@ The net annual change in ACE count for individual \(i\) is therefore
 where \(U_i \sim \mathrm{Uniform}(0,1)\) is drawn independently each year.
 \(p\) and \(q\) play the same roles in the simulation as in the analytical
 model: \(p\) governs the rate of acquiring adversity and \(q\) the recovery rate.
+The two processes act on disjoint phases of life, so a child cannot heal
+while still accumulating adversity (Figure~\ref{fig:model-specification}E).
+
+\begin{figure}[!hbtp]
+    \centering
+        \includegraphics[width=\textwidth]{./figures/figure_3/main.pdf}
+    \caption{\textbf{Specification of the simulation model.}
+Three mechanisms determine how adversity moves through the population: its
+effect on fertility (\textbf{A--C}), its change within a lifetime
+(\textbf{E}), and its transmission between generations (\textbf{F}).
+\textbf{A}, Annual birth probability against age for four values of the
+completed ACE count \(\bar{k}\).  Adversity accelerates the life-history
+schedule, rescaling the age axis about the youngest fertile age \(a_0\) by the
+pace \(\pi(\bar{k})\) and scaling the probability by the same factor.  The
+fertile window therefore starts at \(a_0\) for every \(\bar{k}\) and is
+compressed rather than moved, and the higher peaks are the pace factor.
+\textbf{B}, Consequences for the two components of reproduction, both shown
+relative to their value at \(\bar{k}=0\) so that a change in one can be read
+against a change in the other; separate axes would let the scaling decide
+which curve appears to move.  The mean age at childbearing falls by a third,
+from 27.7 to 18.6 years (annotated), while net reproduction rises by 2.1\%.
+That rise is not additional fertility: the expected number of births over a
+full reproductive span is unchanged to within 0.2\%, and net reproduction
+weights each birth by the probability of surviving to that age, so bringing
+childbearing forward discounts it less by mortality.  The tempo effect
+therefore changes when individuals reproduce rather than how much.
+\textbf{C}, The quantum effect.  Fertility is normalised by the
+population mean multiplier, so that \(\alpha\) redistributes reproduction
+towards exposed individuals while leaving the total unchanged (dotted line).
+The ratio between the two curves is \(\alpha\) at every composition.  This is
+the normalisation the replicator dynamic performs when it divides by mean
+fitness; without it \(\alpha\) would raise the population growth rate rather
+than the relative standing of the exposed.
+\textbf{D}, The two empirical schedules the model is built on: the UN
+age-specific fertility schedule \(b_0(a)\) \cite{un_wpp_fertility} and the
+survivorship \(l(a)\) implied by the UN life table \cite{un_wpp_mortality}.
+\textbf{E}, Within-life dynamics.  Exposure acts only during childhood and
+healing only during adulthood, so the two processes occupy disjoint phases and
+an individual cannot heal from adversity while still accumulating it.
+\textbf{F}, The intergenerational transmission matrix
+\(\Pr(k' \mid k)\), sampled from the model itself.  Mass shifts upwards as
+maternal exposure rises; the flat bands reflect the uniform allocation within
+the reported \(2\text{--}3\) and \(\geq 4\) categories of
+Table~\ref{tab:intergenerational}.}
+    \label{fig:model-specification}
+\end{figure}
 
 \subsection*{Initial conditions}
 
@@ -396,10 +507,37 @@ and sexes are sampled according to empirical proportions.  Initial ACE counts
 are drawn from sex-stratified prevalence distributions reported in the Canadian
 Longitudinal Study on Aging \cite{joshi2021prevalence}.
 
+\subsection*{Simulation protocol}
+
+We swept the three parameters that the analytical model shares with the
+simulation.  The healing probability \(q\) takes 61 values from \(0.00\) to
+\(0.60\) in steps of \(0.01\); the reproductive multiplier \(\alpha\) takes ten
+values from \(1.05\) to \(1.50\) in steps of \(0.05\); and the background
+exposure probability \(p\) takes the eleven values from \(0.00\) to \(0.10\) in
+steps of \(0.01\), together with \(0.20\) as a saturated case retained for the
+supplementary material.  This gives 7{,}320 parameter combinations.
+
+Each combination was simulated for 50 independent replicates of 200 years,
+starting from 10{,}000 individuals, for a total of 366{,}000 runs.  Newborns are
+assigned male with probability \(0.51\), and an individual is counted as
+traumatised when \(k \geq 1\).  Summary quantities are averaged over the years
+from 100 onwards, discarding the first 100 years as a warm-up during which the
+population relaxes from the initial age structure and ACE distribution to its
+long-run state; Figure~\ref{fig:simulation-outcomes}A--B shows that
+this is comfortably longer than the transient.
+
+Every run is seeded explicitly, so the sweep reproduces exactly.  Each
+parameter combination draws from its own block of 50 consecutive seeds, and the
+blocks are disjoint, so replicates are independent both within and across
+combinations.  A single generator is shared between the construction of the
+initial population and the run itself, so each replicate consumes one
+continuous random stream.  Between-replicate variation is shown throughout as
+an inter-quartile range or a standard deviation.
+
 \subsection*{Relationship to the analytical model}
 
-The simulation preserves the core dynamical structure---\(\alpha\), \(p\), and
-\(q\) enter with the same meanings as in the replicator--mutation model---but
+The simulation preserves the core dynamical structure: \(\alpha\), \(p\), and
+\(q\) enter with the same meanings as in the replicator--mutation model. It
 replaces the mean-field assumption with explicit demographic stochasticity and
 age structure, and the binary ACE state with a discrete count on
 \(\{0, \dots, 8\}\).  In the limit of large population size and binary
@@ -407,25 +545,26 @@ aggregation of the ACE count, the simulation dynamics converge to the analytical
 predictions; departures reflect stochasticity and heterogeneity.
 
 To identify the boundary between high- and low-adversity parameter regimes in
-the simulation output we applied \(k\)-means clustering (\(k=2\)) to the log-transformed mean ACE
-surface; full details of this procedure are given in
+the simulation output we applied \(k\)-means clustering (\(k=2\)) to the
+log-transformed mean ACE surface; full details of this procedure are given in
 Supplementary Information~\ref{si:kmeans}.
 
 Figure~\ref{fig:population-dynamics} illustrates the baseline demographic
 behaviour of the simulation across six parameter combinations
 (\(q \in \{0.00, 0.01, 0.05\}\), \(\alpha \in \{1.05, 1.35\}\), no background
-exposure): population size and mean age converge to stable levels within a
-few decades across all combinations (panels A--B), and the empirical
-survivorship curves closely match the theoretical life-table predictions
-irrespective of ACE parameters, confirming that mortality is
-ACE-independent (panel C).  Population age pyramids at 50-year intervals
+exposure): population size and mean age settle within a few decades across all
+combinations (panels A--B), and the growth-corrected survivorship curves fall
+on the theoretical life-table predictions irrespective of ACE parameters,
+confirming that mortality is ACE-independent (panel C).  The correction is
+needed because a population snapshot yields period rather than cohort
+survivorship; the caption describes it.  Population age pyramids at 50-year intervals
 (panels D--H) show the transition from the initial UK age structure to the
 long-run steady-state shape for a representative parameter set
 (\(q = 0.05\), \(\alpha = 1.35\), no background exposure).
 
 \begin{figure}[!hbtp]
     \centering
-        \includegraphics[width=\textwidth]{./figures/figure_3/main.pdf}
+        \includegraphics[width=\textwidth]{./figures/figure_4/main.pdf}
     \caption{\textbf{Population-level demographic dynamics of the simulation.}
 Results shown for six parameter combinations (\(q \in \{0.00, 0.01, 0.05\}\),
 \(\alpha \in \{1.05, 1.35\}\), no background exposure) to demonstrate that
@@ -433,18 +572,30 @@ the demographic dynamics are robust across the parameter space explored.
 \textbf{A}, Trajectories of total population size over 200 years (median
 \(\pm\) IQR across replicates, one line per parameter combination).
 \textbf{B}, Mean age of the population over time, with the same summary.
-\textbf{C}, Empirical period survivorship \(l(x) = N(x)/N(0)\) computed from
-simulation snapshots after year 100.
+\textbf{C}, Survivorship \(l(x)\) recovered from simulation snapshots after
+year 100.  A snapshot gives the period ratio \(N(x)/N(0)\), which equals the
+life-table \(l(x)\) only in a stationary population: where the population grows
+at rate \(r\) the stable age distribution is proportional to
+\(l(x)\mathrm{e}^{-rx}\), so the raw ratio understates survival by that factor.
+We therefore estimate \(r\) for each replicate by regressing log population size
+on time across the snapshot years, and rescale by \(\mathrm{e}^{rx}\).  The
+correction is substantial, reaching a factor of 1.8 by age 80 at
+\(r = 0.0073\,\mathrm{yr}^{-1}\).
 One pair of median lines (male and female sharing the same colour and line
-style) is shown per parameter combination.
-The grey band shows the pooled inter-quartile range across all parameter
-combinations and replicates.
-Dark grey lines show the theoretical survivorship curves derived directly
-from the UN life-table probabilities (solid: male; dashed: female).
-The close agreement across all parameter combinations confirms that the
-simulated age structure is consistent with the embedded mortality schedule
-and is insensitive to the ACE transmission parameters, as expected given
-that mortality is modelled as ACE-independent.
+style) is shown per parameter combination, and the grey band shows the pooled
+inter-quartile range across all parameter combinations and replicates.
+Black lines show the theoretical survivorship curves derived directly from the
+UN life-table probabilities (solid: male; dashed: female).
+All six parameter combinations collapse onto those curves, separating only into
+the male and female pair the life table predicts.  This confirms both that the
+simulated age structure is consistent with the embedded mortality schedule and
+that it is insensitive to the ACE transmission parameters, as expected given
+that mortality is modelled as ACE-independent.  We note that a single scalar
+\(r\) per replicate corrects the whole age profile, so the agreement is not a
+matter of fitting: were the mortality schedule misapplied, no choice of \(r\)
+would recover the theoretical curves.  The collapse is in addition evidence
+that the population has reached a stable age distribution by year 100, since
+the identity used to correct it holds only in that regime.
 \textbf{D--H}, Population age pyramids (median counts across replicates) at
 years 0, 50, 100, 150, and 200 for the representative parameter set
 (\(q = 0.05\), \(\alpha = 1.35\), no background exposure), showing the
@@ -455,11 +606,11 @@ steady-state shape imposed by the empirical fertility and mortality schedules.}
 
 \begin{figure}[!hbtp]
     \centering
-        \includegraphics[width=\textwidth]{./figures/figure_4/main.pdf}
+        \includegraphics[width=\textwidth]{./figures/figure_5/main.pdf}
     \caption{\textbf{Simulation outcomes across parameter regimes (mean ACE count).}
 Panels are arranged in three rows and two columns; the left column shows
 results without background trauma exposure (\(p = 0\)) and the right column
-with positive background exposure (\(p = 0.2\)).
+with positive background exposure (\(p = 0.05\)).
 \textbf{A--B}, Time trajectories of mean ACEs per person for six combinations
 of healing probability \(q\) and reproductive multiplier \(\alpha\), shown as
 median \(\pm\) IQR across simulation replicates.  The dashed vertical line marks
@@ -469,93 +620,175 @@ with one curve per healing probability.  Higher \(\alpha\) and lower \(q\)
 consistently raise long-run adversity levels, with the effect amplified under
 positive background exposure.
 \textbf{E--F}, Heatmaps of the time-averaged mean ACE count in the
-\((q, \alpha)\) parameter plane, shown on a \(\log(1 + \cdot)\)
-scale.  The dashed red contour marks the \(k\)-means threshold separating high- and
-low-adversity regimes; the linear fit \(q^* = m\alpha + c\) (shown in each
-panel title) recovers a boundary consistent with the analytical condition
-\(q > 1 - \alpha^{-1}\).  Corresponding results for the proportion-traumatised
-metric are shown in Fig.~\ref{fig:simulation-outcomes-si}.}
+\((q, \alpha)\) parameter plane, shown on a \(\log(1 + \cdot)\) scale.  The
+dashed red contour marks the \(k\)-means threshold separating high- and
+low-adversity regimes, computed once on the surfaces pooled over both values of
+\(p\) (Supplementary Information~\ref{si:kmeans}).  Each panel title gives the
+least-squares fit \(q^* = m\alpha + c\) to that contour.  Here \(q\) is an annual
+rate; on a per-generation scale (Supplementary Information~\ref{si:timescales})
+the boundary lies above the analytical threshold \(q = 1 - \alpha^{-1}\) and is
+markedly flatter in \(\alpha\), as we discuss in Section~\ref{sec:discussion}.
+Corresponding results for the proportion-traumatised metric are shown in
+Figure~\ref{fig:simulation-outcomes-si}.}
     \label{fig:simulation-outcomes}
 \end{figure}
 
 \section{Discussion}
+\label{sec:discussion}
 
+We have combined a minimal analytical model of trauma transmission with a
+data-informed individual-based simulation of the same mechanisms.
 
-Our central result is a closed-form threshold,
-\(q < 1 - 1/\alpha\), separating parameter regimes in which trauma
-necessarily declines from those in which it persists endemically.
-Any positive background exposure (\(p > 0\)) eliminates the trauma-free
-equilibrium entirely: the quadratic fixed-point equation always admits an
-interior root, so even a small rate of environmental adversity produces a
-stable long-run prevalence.  The individual-based simulation corroborates these
-analytical predictions; demographic stochasticity and age structure shift the effective boundary but do not
-qualitatively alter the prediction.
+Our central result is a closed-form threshold, \(q < 1 - 1/\alpha\), separating
+parameter regimes in which trauma necessarily declines from those in which it
+persists endemically.  When both a positive background exposure and a positive
+recovery rate are present (\(p, q > 0\)), the quadratic fixed-point equation
+admits an interior root, so any sustained environmental adversity produces a
+stable long-run prevalence rather than eventual elimination.  We show in
+Supplementary Information~\ref{si:stability} that this root is unique and
+globally stable, and that the threshold is an exchange of stability between the
+trauma-free and endemic states rather than merely a sign condition.
 
 The threshold condition \(\alpha(1-q) > 1\) is structurally analogous to the
 basic reproduction number \(R_0\) in infectious-disease epidemiology
 \cite{hofbauer1998evolutionary}, with the product \(\alpha(1-q)\) playing the
-role of \(R_0\).  Unlike standard SIS/SIR frameworks, this system contains a demographic
-amplification term: adversity is not merely transmitted but is reinforced by a
-reproductive advantage that standard epidemic models lack.
+role of \(R_0\).  Unlike standard SIS and SIR frameworks, this system contains a
+demographic amplification term: adversity is not merely transmitted but is
+reinforced by a reproductive advantage that standard epidemic models lack.
 
-The parameter \(\alpha > 1\) reflects observed associations between early
-adversity and accelerated life-history strategies
-\cite{ellis2009fundamental,williams2019adverse}.  This does not imply that
-trauma is adaptive; it captures empirically documented tempo and quantum effects
-on reproductive timing and intensity.  The tempo effect (earlier age at first birth) and the
-quantum effect (elevated birth rates conditional on effective age) make
-separable contributions to persistence, and the threshold condition provides a
-way to quantify their joint role.  The empirical range of \(\alpha\) in
-contemporary populations suggests that many settings may lie close to or above
-the persistence threshold.
+\subsection*{What the simulation adds}
 
-The simulation broadly corroborates the analytical predictions. Without
-background exposure, mean ACE trajectories converge to moderate endemic levels
-from a range of initial conditions (Fig.~\ref{fig:simulation-outcomes}A),
-consistent with the stable interior equilibrium. Positive background exposure
-raises the outcome substantially and widens variation across parameter
-combinations (Fig.~\ref{fig:simulation-outcomes}B), confirming that even modest
-environmental transmission eliminates the trauma-free state. The summary panels
-(Fig.~\ref{fig:simulation-outcomes}C--D) show a consistent ordering: higher
-\(\alpha\) and lower \(q\) raise long-run adversity, with the effect amplified
-under positive background exposure. At \(q = 0.05\), mean ACE counts are
-suppressed near zero at moderate \(\alpha\) when \(p = 0\), but only partially
-attenuated when \(p > 0\). The heatmaps (Fig.~\ref{fig:simulation-outcomes}E--F)
-show the transition is well approximated by a linear threshold
-\(q^*(\alpha) = m\alpha + c\) (\(R^2 \geq 0.99\)). Fitted slopes are modest
-without background exposure (\(m \approx 0.013\)) but roughly four-fold steeper
-under positive background exposure (\(m \approx 0.042\)). The positive intercepts
-(\(c \approx 0.025\)--\(0.168\)) imply a minimum healing requirement even as
-\(\alpha \to 1\), consistent with any \(p > 0\) shifting the equilibrium
-landscape upward. Results for the proportion-traumatised metric are qualitatively
-identical (Fig.~\ref{fig:simulation-outcomes-si}). The threshold separating
-suppression from persistence scales approximately linearly with \(\alpha\);
-background exposure raises it, so addressing transmission and healing separately
-is insufficient.
+The two models do not share a time step, and comparing their thresholds
+requires the mapping we derive in Supplementary
+Information~\ref{si:timescales}: the analytical parameters act once per
+generation on a binary state, while the simulated ones act once per year on a
+graded count and are confined to disjoint phases of life.
+
+On that common footing the two thresholds differ in both level and slope, and
+the way they differ is itself a result.  Converted to a per-generation
+probability, the fitted boundary without background exposure,
+\(q^*(\alpha) = 0.021\alpha + 0.042\) (\(R^2 = 0.99\)), runs from \(0.47\) at
+\(\alpha = 1.05\) to \(0.52\) at \(\alpha = 1.50\).  The analytical threshold
+over the same range runs from \(0.05\) to \(0.33\).  The simulated boundary
+therefore sits above the analytical one throughout, by a factor of \(1.6\) at
+\(\alpha = 1.5\) rising to an order of magnitude as \(\alpha \to 1\), and it is
+markedly flatter: it moves by \(10\%\) across the swept range of \(\alpha\)
+where the analytical threshold moves by a factor of seven.
+
+The two discrepancies have different sources.  The level reflects structure the
+analytical model omits.  Healing reaches an individual only during the years
+between adulthood and reproduction, and it removes one adverse experience at a
+time rather than clearing the state outright, so suppressing adversity in an
+age-structured population is harder than a mean-field account implies.  The
+flatness reflects something else.  An individual has \(D = 9.7\) annual healing
+draws before reproducing, and at the rates in question that fixes the
+per-generation recovery probability near one half almost regardless of
+\(\alpha\).  What governs whether adversity persists is how many opportunities
+for recovery a life affords, rather than the size of the reproductive
+advantage.  Neither discrepancy is a failure to reproduce the analytical
+result: together they measure what age structure and a graded state contribute,
+neither of which a mean-field model can represent.  We reach the same
+conclusion below from the endemic levels themselves, by a different route.
+
+Background exposure raises the boundary substantially, to
+\(q^*(\alpha) = 0.032\alpha + 0.156\) at \(p = 0.05\) (\(R^2 = 0.98\)).  The
+positive intercepts in both fits imply a minimum healing requirement that
+persists even as \(\alpha \to 1\), so a population with no reproductive
+differential at all still requires sustained recovery to suppress adversity.
+
+\subsection*{Transmission dominates the demographic channel}
+
+An observation we did not anticipate is how little of the long-run outcome the
+reproductive differential accounts for.  Across the full swept range of
+\(\alpha\), from \(1.05\) to \(1.50\), the mean ACE count rises by between
+1.1\% and 6.0\% depending on the healing rate and on background exposure
+(Figure~\ref{fig:simulation-outcomes}C--D), while varying \(q\) over a
+comparable range moves it by about 45\%.  The endemic level is set
+principally by the intergenerational transmission distribution
+\(\Pr(k' \mid k)\), which is fixed by data, and only secondarily by the
+demographic mechanism the analytical model is built around.  We report this
+because it bears directly on where intervention effort is best directed, and
+because it qualifies the analogy above: the demographic amplification term is
+real and it moves the threshold, but in a realistically parameterised
+population it is not what determines how much adversity there is.
+
+Because fertility is normalised by the population mean multiplier
+(Section~\ref{sec:methods}), neither \(\alpha\) nor \(q\) has a demographic
+footprint: the growth rate is \(-0.0007\,\mathrm{yr}^{-1}\) across every
+parameter combination we simulate (Figure~\ref{fig:population-dynamics}A).
+This is by construction, and it is the property that lets \(\alpha\) mean the
+same thing in both models.  It also means the simulation makes no claim about
+how adversity affects population size, only about how it is distributed.
+
+\subsection*{A floor that healing cannot reach}
+
+Because exposure acts only on children and healing only on adults, sustained
+childhood exposure sets a floor on population adversity that no adult recovery
+rate can penetrate.  At \(\alpha = 1.35\) and a healing probability of
+\(0.60\), an implausibly high rate, the mean ACE count still settles at
+\(0.91\) when \(p = 0.10\) and at \(1.37\) when \(p = 0.20\).  Above an
+exposure rate of roughly \(0.1\) per childhood year there is therefore no
+healing rate that brings the population below the threshold at all.
+
+This has a direct reading.  Adult recovery and childhood exposure are not two
+interchangeable levers on the same quantity.  Where ongoing exposure is high
+enough, reducing it is not one option among two but a precondition, and
+therapeutic provision alone cannot substitute for it however well resourced.
+The analytical model cannot express this, because it applies both processes to
+the whole population every generation; it is a consequence of age structure and
+so appears only in the simulation.
+
+\subsection*{Intervention}
 
 To drive the system below endemic persistence, \(q\) must exceed
-\(1 - 1/\alpha\); any intervention that reduces \(\alpha\) simultaneously
-lowers the required healing rate.  Interventions combining socioeconomic support
-with expanded therapeutic access are therefore doubly effective, acting on both
-factors in \(\alpha(1-q)\).  The empirical linear relationship
-\(q^*(\alpha) = m\alpha + c\) implies that populations with higher \(\alpha\)
-require proportionally more intensive recovery programmes.
+\(1 - 1/\alpha\), and any intervention that reduces \(\alpha\) simultaneously
+lowers the required healing rate.  Interventions combining socioeconomic
+support with expanded therapeutic access therefore act on both factors in
+\(\alpha(1-q)\).  The fitted relationship \(q^*(\alpha) = m\alpha + c\) makes
+the requirement explicit for a given population, and the positive intercept
+sets a floor below which no reduction in \(\alpha\) alone suffices.
 
-Several limitations apply.  Both models simplify adversity: the analytical model
-uses a binary state, the simulation a discrete count on \(\{0,\dots,8\}\), and
-neither captures continuous severity or multi-domain ACE categorisations.
-Mortality is ACE-independent, though emerging evidence links high ACE burden to
-premature mortality, which would reduce the effective \(\alpha\) and lower the
-persistence threshold.  No spatial or network structure is included, so local
-clustering of adversity and peer transmission are not represented.  Finally,
-\(\alpha\) and \(\tau\) were calibrated from UK and Canadian data; cross-cultural
-variation remains unexplored.
+We emphasise that \(\alpha > 1\) is a descriptive demographic rate.  It
+reflects observed associations between early adversity and accelerated
+life-history strategies \cite{ellis2009fundamental,williams2019adverse} and
+carries no implication that trauma is adaptive, nor any normative content
+whatever.  The model is an accounting of population-level flows and says
+nothing about individuals.  Its intervention implications run entirely through
+reducing exposure and supporting recovery.
 
-Extensions could include multi-domain ACE severity, spatial and network
-structure, and cross-national calibration of \(\alpha\).  The threshold condition
-offers a direct basis for evaluating intervention cost-effectiveness.  The
-framework gives population-level adversity science the same formal structure as
-epidemic theory: a minimal model with an explicit persistence threshold.
+\subsection*{Limitations}
+
+Both models simplify adversity: the analytical model uses a binary state, the
+simulation a discrete count on \(\{0,\dots,8\}\), and neither captures
+continuous severity or multi-domain ACE categorisations.  The uniform
+allocation of probability mass within the reported \(2\text{--}3\) and
+\(\geq 4\) transmission categories is an assumption of convenience, and the
+ceiling at eight binds at high exposure rates, so results at
+\(p \geq 0.1\) are partly a saturation effect.
+
+Mortality is ACE-independent, though evidence links high ACE burden to
+premature mortality.  Whether including it would raise or lower the persistence
+threshold depends on when the excess mortality falls relative to the
+reproductive window, and we do not attempt to resolve that here.
+Transmission is conditioned on maternal exposure only, and no spatial or
+network structure is included, so the clustering of adversity within families
+and neighbourhoods is absent; since clustering reduces effective mixing, we
+expect a structured model to require more healing rather than less.
+
+Finally, the model draws its parameters from four different populations, as set
+out above.  Consistent single-population calibration, and the cross-cultural
+variation it would expose, remain unexplored.
+
+\subsection*{Conclusion}
+
+We have shown that a minimal model of intergenerational adversity admits an
+explicit persistence threshold, that an age-structured simulation reproduces
+its dependence on the reproductive differential while requiring substantially
+more recovery than the mean-field account predicts, and that sustained
+childhood exposure imposes a floor which adult recovery cannot reach.  The
+framework gives population-level adversity science a formal structure it has so
+far lacked.  Whether real populations sit above or below the threshold is an
+empirical question, and one we hope to address with cohort data in future work.
 
 \bibliographystyle{plain}
 \bibliography{bibliography.bib}
@@ -565,25 +798,133 @@ epidemic theory: a minimal model with an explicit persistence threshold.
 \section*{Supplementary Information}
 \addcontentsline{toc}{section}{Supplementary Information}
 
+\subsection{Stability of the endemic equilibrium}
+\label{si:stability}
+
+The main text locates the fixed points of the update map but does not address
+their stability.  We record that here.  Write the map as
+\[
+    g(x)=\frac{Ax+p}{Bx+1},
+    \qquad
+    A=\alpha(1-q)-p,
+    \qquad
+    B=\alpha-1 .
+\]
+
+\begin{proposition}
+\label{prop:stability}
+Let \(\alpha>1\) and \(p,q\in(0,1)\) with \(p+q<1\).  Then \(g\) has a unique
+fixed point \(x^*\) in \((0,1)\), and every orbit starting in \([0,1]\)
+converges to it.
+\end{proposition}
+
+\begin{proof}
+Since \(Bx+1\ge 1\) on \([0,1]\), the map has no pole there.  Evaluating at the
+endpoints gives \(g(0)=p\) and \(g(1)=\alpha(1-q)/\alpha=1-q\), both in
+\((0,1)\), so \(g\) maps \([0,1]\) into itself.
+
+Differentiating,
+\[
+    g'(x)=\frac{A-Bp}{(Bx+1)^2},
+    \qquad
+    A-Bp=\alpha(1-q)-p-(\alpha-1)p=\alpha\bigl(1-q-p\bigr),
+\]
+which is positive when \(p+q<1\), so \(g\) is strictly increasing.
+
+Because \(Bx+1>0\), the net change \(\Delta(x)=g(x)-x\) has the opposite sign to
+the quadratic \((\alpha-1)x^2+(1+p-\alpha+\alpha q)x-p\).  That quadratic has
+leading coefficient \(\alpha-1>0\) and constant term \(-p<0\), so the product of
+its roots is \(-p/(\alpha-1)<0\) and exactly one root is positive.  Since
+\(\Delta(0)=p>0\) and \(\Delta(1)=-q<0\), that root lies in \((0,1)\) and is the
+unique fixed point there.
+
+Uniqueness and monotonicity together give \(\Delta>0\) on \([0,x^*)\) and
+\(\Delta<0\) on \((x^*,1]\).  For \(x_0<x^*\) the orbit is therefore increasing,
+and because \(g\) is increasing it remains below \(x^*\); a bounded monotone
+orbit converges, and its limit is a fixed point, hence \(x^*\).  The case
+\(x_0>x^*\) is symmetric.  The boundary cases \(x_0\in\{0,1\}\) are immediate,
+since \(g\) maps them into the interior.
+\end{proof}
+
+The condition \(p+q<1\) is not restrictive: both parameters are annual
+probabilities well below one half throughout.  We verified the proposition
+numerically on 4{,}000 randomly drawn parameter sets, in every case recovering a
+unique interior fixed point with \(|g'(x^*)|<1\) and convergence from both
+endpoints.
+
+Setting \(p=0\) recovers the threshold of the main text as a stability
+statement.  The trauma-free state \(x=0\) is then a fixed point with
+\(g'(0)=\alpha(1-q)\), so it is asymptotically stable precisely when
+\(\alpha(1-q)<1\).  At \(\alpha(1-q)=1\) it loses stability in a transcritical
+bifurcation, at which the interior equilibrium
+\(x^*=1-\alpha q/(\alpha-1)\) enters \((0,1)\).  The threshold
+\(q<1-\alpha^{-1}\) is thus an exchange of stability between the trauma-free and
+endemic states, not merely a sign condition.
+
+\subsection{Relating the two time scales}
+\label{si:timescales}
+
+The parameters \(p\) and \(q\) do not carry the same units in the two models,
+and the two thresholds cannot be compared until they do.  In the analytical
+model each acts once per generation on a binary state.  In the simulation each
+acts once per year on a count in \(\{0,\dots,8\}\), and each is restricted to a
+phase of life: exposure to childhood, healing to adulthood.
+
+Three separate differences follow.  First, the time step: the generation time
+implied by the fitted schedules, measured as the mean age at childbearing for an
+unexposed individual, is \(T=27.7\) years.  Second, the phase restriction: an
+individual is subject to healing only between age 18 and reproduction, a window
+of \(D=T-18=9.7\) years, and to exposure only over the 18 years of childhood.
+Third, the state space: one healing event decrements the ACE count by one, so an
+individual carrying \(k\) ACEs requires \(k\) such events to become
+untraumatised, whereas one recovery event in the analytical model clears the
+state outright.
+
+Writing \(q_{\mathrm{yr}}\) and \(p_{\mathrm{yr}}\) for the annual rates, the
+number of healing events before reproduction is
+\(\mathrm{Binomial}(D, q_{\mathrm{yr}})\), so an individual with \(k\) ACEs
+recovers within one generation with probability
+\[
+    q_{\mathrm{gen}}(k)=\Pr\bigl[\mathrm{Binomial}(D,q_{\mathrm{yr}})\ge k\bigr],
+    \qquad
+    q_{\mathrm{gen}}(1)=1-(1-q_{\mathrm{yr}})^{D},
+\]
+and correspondingly
+\(p_{\mathrm{gen}}=1-(1-p_{\mathrm{yr}})^{18}\) for acquiring at least one ACE
+during childhood.  The two-state analytical parameters correspond to the
+\(k=1\) case.  For orientation, \(q_{\mathrm{yr}}=0.03\) maps to
+\(q_{\mathrm{gen}}=0.255\) and \(p_{\mathrm{yr}}=0.02\) to
+\(p_{\mathrm{gen}}=0.305\): annual rates of a few percent are per-generation
+probabilities of a few tens of percent, an order of magnitude apart.
+
+We emphasise that this mapping is exact only for the \(k=1\) case in a
+stationary population.  It neglects the dependence of \(T\) on \(k\) through the
+tempo effect, and it treats the ACE count as though recovery from \(k>1\) were
+the only additional obstacle.  Any residual discrepancy between the two
+thresholds after this transformation is therefore not a units artefact: it
+measures the contribution of age structure and of the graded adversity state,
+neither of which the mean-field model can represent.
+
 \subsection{Simulation outcomes: proportion-traumatised metric}
 \label{si:prop-traumatised}
 
 \begin{figure}[!htbp]
     \centering
-        \includegraphics[width=\textwidth]{./figures/figure_4/si.pdf}
-    \caption{\textbf{Simulation outcomes across parameter regimes (proportion traumatised).}
-Layout mirrors Fig.~\ref{fig:simulation-outcomes}.  Left column: no background
+        \includegraphics[width=\textwidth]{./figures/figure_5/si.pdf}
+    \caption{\textbf{Simulation outcomes across parameter regimes (proportion
+traumatised).}
+Layout mirrors Figure~\ref{fig:simulation-outcomes}.  Left column: no background
 trauma exposure (\(p = 0\)); right column: positive background exposure
-(\(p = 0.2\)).
+(\(p = 0.05\)).
 \textbf{A--B}, Time trajectories of the proportion of individuals with at least
-one ACE for the same six parameter combinations as Fig.~\ref{fig:simulation-outcomes},
+one ACE for the same six parameter combinations as Figure~\ref{fig:simulation-outcomes},
 shown as median \(\pm\) IQR.
 \textbf{C--D}, Mean \(\pm\) SD of proportion traumatised as a function of
 \(\alpha\), one curve per healing probability.
 \textbf{E--F}, Heatmaps of the time-averaged proportion traumatised in the
 \((q, \alpha)\) parameter plane (\(\log(1+\cdot)\) scale).  The
 dashed red contour marks the \(k\)-means threshold; the linear fit \(q^* = m\alpha + c\)
-is consistent with the mean-ACE results in Fig.~\ref{fig:simulation-outcomes}E--F.}
+is consistent with the mean-ACE results in Figure~\ref{fig:simulation-outcomes}E--F.}
     \label{fig:simulation-outcomes-si}
 \end{figure}
 
@@ -592,13 +933,21 @@ is consistent with the mean-ACE results in Fig.~\ref{fig:simulation-outcomes}E--
 
 \begin{figure}[!htbp]
     \centering
-        \includegraphics[width=0.75\textwidth]{./figures/figure_4/si_threshold.pdf}
+        \includegraphics[width=0.75\textwidth]{./figures/figure_5/si_threshold.pdf}
     \caption{\textbf{\(k\)-means threshold contours across all values of \(p\).}
-Each curve shows \(q^*(\alpha)\) for a single value of the background exposure probability \(p\)
-(identified by colour, linestyle, and marker; see legend).
-The threshold is computed for each \(p\) separately by \(k\)-means (\(k = 2\)) on the
-\(\log(1+\cdot)\)-transformed mean ACE surface and located by linear interpolation along the \(q\)-axis.
-Higher \(p\) shifts the threshold upward.}
+Each curve shows \(q^*(\alpha)\), the healing probability at which the mean ACE
+surface crosses the threshold, for a single value of the background exposure
+probability \(p\) (identified by colour; see legend).  A single threshold is
+used throughout, computed by \(k\)-means (\(k = 2\)) on the
+\(\log(1+\cdot)\)-transformed surface pooled over \(p = 0\) and \(p = 0.05\),
+and crossings are located by linear interpolation along the \(q\)-axis.  The
+contours are therefore directly comparable in level with
+Figure~\ref{fig:simulation-outcomes}E and F, whose red contours the \(p = 0\)
+and \(p = 0.05\) curves reproduce.  Higher \(p\) shifts the threshold upward,
+from \(q^* \approx 0.064\) at \(p = 0\) to \(q^* \approx 0.38\) at
+\(p = 0.1\), both evaluated at \(\alpha = 1.05\).  At \(p = 0.2\) the surface
+lies wholly above the threshold, so no healing rate in the swept range crosses
+it and no contour is drawn.}
     \label{fig:threshold-vs-p}
 \end{figure}
 
@@ -606,8 +955,8 @@ Higher \(p\) shifts the threshold upward.}
 \label{si:kmeans}
 
 To identify the boundary between parameter regimes that sustain high and low
-levels of adversity, we applied \(k\)-means clustering with \(k = 2\) \cite{lloyd1982least} to the
-log-transformed mean ACE surface.
+levels of adversity, we applied \(k\)-means clustering with \(k = 2\)
+\cite{lloyd1982least} to the log-transformed mean ACE surface.
 Let \(\bar{k}(q, \alpha)\) denote the mean ACE count averaged across all years
 and simulation replicates at healing probability \(q\) and reproductive
 multiplier \(\alpha\), and let
@@ -616,9 +965,14 @@ be its \(\log(1 + \cdot)\) transform, applied to compress the dynamic range
 of the surface and to handle zero values stably.
 \(k\)-means partitions the observed values of \(\ell\) into two clusters by
 iteratively assigning each value to its nearest cluster centre and updating
-centres to cluster means until convergence (initialised at the 25th and 75th
-percentiles of \(\ell\)). The scalar threshold \(\ell^*\) is the midpoint
+centres to cluster means until convergence. We initialise with \(k\)-means++
+\cite{arthur2007kmeans}, keep the best of ten restarts, and fix the random seed so
+that the threshold is reproducible. The scalar threshold \(\ell^*\) is the midpoint
 between the two converged cluster centres, and requires no user-specified cutoff.
+We compute \(\ell^*\) once, on the values of \(\ell\) pooled over \(p = 0\) and
+\(p = 0.05\), and apply the same \(\ell^*\) at every value of \(p\), so that the
+threshold heal rates reported in Figure~\ref{fig:simulation-outcomes} and
+Figure~\ref{fig:threshold-vs-p} are on one scale and can be compared directly.
 The threshold defines a level set
 \(\{(q, \alpha) : \ell(q, \alpha) = \ell^*\}\)
 in the original parameter space, which we locate for each value of \(\alpha\)
@@ -632,10 +986,13 @@ described by a linear relationship
 \]
 recovered by ordinary least squares regression on the interpolated crossing
 points (fits shown in panel titles; \(R^2 > 0.95\) in all cases).
-This linear structure implies that the critical healing probability required to
-suppress endemic adversity scales proportionally with the reproductive
-multiplier \(\alpha\), consistent with the analytical threshold condition
-\(q > 1 - \alpha^{-1}\) derived in Section~2 (Fig.~\ref{fig:simulation-outcomes}).
-Fig.~\ref{fig:threshold-vs-p} shows the resulting threshold contours for every value of \(p\) in the data.
+The boundary is therefore close to linear in \(\alpha\) over the swept range,
+with a positive intercept.  It does not follow the analytical threshold
+\(q = 1 - \alpha^{-1}\) derived in Section~\ref{sec:methods}: once both are
+expressed per generation (Supplementary Information~\ref{si:timescales}) the
+simulated boundary is higher and markedly flatter, as we discuss in
+Section~\ref{sec:discussion}.
+Figure~\ref{fig:threshold-vs-p} shows the resulting threshold contours for
+every value of \(p\) in the data whose surface crosses \(\ell^*\).
 
 \end{document}

@@ -6,14 +6,14 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+
 from hphp.analytical import (
-    simulation,
-    x_star_equilibrium,
     delta,
     find_roots_on_unit_interval,
     is_stable_equilibrium,
+    simulation,
+    x_star_equilibrium,
 )
-
 
 mpl.rcParams.update({
     "font.family":       "sans-serif",
@@ -59,7 +59,8 @@ def mark_equilibrium_stability(ax, f, r, ms=5.5):
     if is_stable_equilibrium(f, r):
         ax.plot(r, 0, "o", color="black", markersize=ms)
     else:
-        ax.plot(r, 0, "o", markerfacecolor="white", markeredgecolor="black", markersize=ms)
+        ax.plot(r, 0, "o", markerfacecolor="white", markeredgecolor="black",
+                markersize=ms)
 
 
 def panel_label(ax, text, dy=0.02):

@@ -3,18 +3,20 @@ import numpy.typing as npt
 
 from .individual import Individual
 
+# Used when no generator is supplied, so that direct calls still work. The
+# simulation always threads its own generator through, so that a run is fully
+# determined by its seed.
+DEFAULT_GENERATOR = np.random.default_rng()
 
-def death(age: int, sex: str) -> bool:
-    """
-    This uses data from the UN's department of economic and social affairs
-    https://population.un.org/wpp/Download/Standard/Mortality/
-    returning True if the individual dies at the given age.
 
-    Life Tables - Based on 1985.
+def resolve_generator(
+    generator: np.random.Generator | None,
+) -> np.random.Generator:
+    """Return the supplied generator, or the module default."""
+    return DEFAULT_GENERATOR if generator is None else generator
 
-    """
-    if sex == "Male":
-        probability_of_death_at_give_age = [
+PROBABILITY_OF_DEATH_BY_AGE = {
+    "Male": [
             0.07446,
             0.01592,
             0.00925,
@@ -116,9 +118,8 @@ def death(age: int, sex: str) -> bool:
             0.35664,
             0.37224,
             1.0000,
-        ]
-    else:
-        probability_of_death_at_give_age = [
+    ],
+    "Female": [
             0.07033,
             0.01503,
             0.00883,
@@ -220,104 +221,131 @@ def death(age: int, sex: str) -> bool:
             0.32225,
             0.33985,
             1.0000,
-        ]
-    try:
-        probability_of_death = probability_of_death_at_give_age[age]
-    except IndexError:
-        probability_of_death = 1
-    return bool(np.random.random() < probability_of_death)
+    ],
+}
 
 
-def birth(
-    age: int, number_of_aces: int = 0, alpha: float = 1.0, tempo_years_per_ace: int = 3
+def survivorship(sex: str) -> list[float]:
+    """
+    Cumulative probability of surviving from birth to each age.
+
+    This is the $l(x)$ column of the life table, derived from
+    `PROBABILITY_OF_DEATH_BY_AGE`.
+    """
+    probabilities = PROBABILITY_OF_DEATH_BY_AGE[sex]
+    surviving = [1.0]
+    for probability_of_death in probabilities:
+        surviving.append(surviving[-1] * (1.0 - probability_of_death))
+    return surviving
+
+
+def death(
+    age: int, sex: str, generator: np.random.Generator | None = None
 ) -> bool:
     """
     This uses data from the UN's department of economic and social affairs
-    - <https://population.un.org/wpp/Download/Standard/Fertility/>
-    to return a boolean representing whether or not someone (able to have a
-    birth) has a birth at a given age.
+    https://population.un.org/wpp/Download/Standard/Mortality/
+    returning True if the individual dies at the given age.
 
-    Parameters
-    ----------
-    age : int
-        The biological age.
-    number_of_aces : int
-        Number of adverse childhood experiences.
-    alpha : float
-        Multiplicative fertility factor (replicator-style fitness multiplier).
-        Under a coarse-grained two-type model (ACE=0 vs ACE>=1), this corresponds
-        directly to the analytical parameter via f_T = alpha * f_S.
-    tempo_years_per_ace : int
-        Number of years by which reproduction is shifted earlier per ACE.
-        This implements the empirical claim that ACE exposure is associated
-        with earlier age at first birth (a tempo effect).
+    Life Tables - Based on 1985.
 
-    We separate two mechanisms:
-
-      (1) Tempo: earlier reproductive timing.
-      (2) Quantum: multiplicative increase in fertility intensity.
     """
+    probabilities = PROBABILITY_OF_DEATH_BY_AGE[
+        "Male" if sex == "Male" else "Female"
+    ]
+    try:
+        probability_of_death = probabilities[age]
+    except IndexError:
+        probability_of_death = 1
+    return bool(resolve_generator(generator).random() < probability_of_death)
 
-    # ---- Tempo effect (earlier reproduction) ----
-    age = adjust_age_for_aces(
-        age=age,
-        number_of_aces=number_of_aces,
-        tempo_years_per_ace=tempo_years_per_ace,
-    )
 
-    overall_probability_of_a_birth_at_given_age = {
-        15: 0.013355,
-        16: 0.025160000000000002,
-        17: 0.040733,
-        18: 0.058070000000000004,
-        19: 0.07627800000000001,
-        20: 0.096371,
-        21: 0.110794,
-        22: 0.12112600000000001,
-        23: 0.12814699999999998,
-        24: 0.13259,
-        25: 0.134492,
-        26: 0.133936,
-        27: 0.131562,
-        28: 0.127503,
-        29: 0.121737,
-        30: 0.113844,
-        31: 0.105234,
-        32: 0.096591,
-        33: 0.087627,
-        34: 0.078933,
-        35: 0.07048399999999999,
-        36: 0.061793999999999995,
-        37: 0.053277,
-        38: 0.044770000000000004,
-        39: 0.036818,
-        40: 0.029645,
-        41: 0.023043,
-        42: 0.017268000000000002,
-        43: 0.012609,
-        44: 0.009054,
-        45: 0.006445,
-        46: 0.0046559999999999995,
-        47: 0.003414,
-        48: 0.0025670000000000003,
-        49: 0.0017,
-    }
+BASELINE_BIRTH_PROBABILITY_BY_AGE = {
+    15: 0.013355,
+    16: 0.025160000000000002,
+    17: 0.040733,
+    18: 0.058070000000000004,
+    19: 0.07627800000000001,
+    20: 0.096371,
+    21: 0.110794,
+    22: 0.12112600000000001,
+    23: 0.12814699999999998,
+    24: 0.13259,
+    25: 0.134492,
+    26: 0.133936,
+    27: 0.131562,
+    28: 0.127503,
+    29: 0.121737,
+    30: 0.113844,
+    31: 0.105234,
+    32: 0.096591,
+    33: 0.087627,
+    34: 0.078933,
+    35: 0.07048399999999999,
+    36: 0.061793999999999995,
+    37: 0.053277,
+    38: 0.044770000000000004,
+    39: 0.036818,
+    40: 0.029645,
+    41: 0.023043,
+    42: 0.017268000000000002,
+    43: 0.012609,
+    44: 0.009054,
+    45: 0.006445,
+    46: 0.0046559999999999995,
+    47: 0.003414,
+    48: 0.0025670000000000003,
+    49: 0.0017,
+}
 
-    probability = overall_probability_of_a_birth_at_given_age.get(age, 0.0)
+# The youngest age at which the UN schedule assigns non-zero fertility. The
+# tempo effect rescales the age axis about this point.
+YOUNGEST_FERTILE_AGE = 15
 
-    # ---- Quantum effect (replicator-style multiplier) ----
-    # Minimal two-type interpretation: traumatised if ACE >= 1
-    if number_of_aces >= 1:
-        probability = min(1.0, alpha * probability)
+# Calibrated so that one ACE lowers the mean age at childbearing by 3.0 years,
+# matching the estimate in 'Adverse Childhood Experiences, Early and Nonmarital
+# Fertility, and Women's Health at Midlife'.
+PACE_INCREASE_PER_ACE = 0.3142
 
-    return bool(np.random.random() < probability)
+
+def life_history_pace(
+    number_of_aces: int, pace_increase_per_ace: float = PACE_INCREASE_PER_ACE
+) -> float:
+    """
+    Return the pace at which an individual moves through the fertility
+    schedule, relative to an unexposed individual.
+
+    A pace greater than one is the accelerated life-history strategy associated
+    with early adversity: the whole reproductive career runs faster, so
+    childbearing happens earlier.
+    """
+    return 1.0 + pace_increase_per_ace * number_of_aces
+
+
+def baseline_birth_probability(effective_age: float) -> float:
+    """
+    Linear interpolation of the UN age-specific fertility schedule.
+
+    Interpolation is needed because the effective age is no longer an integer
+    once the age axis is rescaled by the life-history pace.
+    """
+    if effective_age < YOUNGEST_FERTILE_AGE or effective_age >= 50:
+        return 0.0
+    lower_age = int(np.floor(effective_age))
+    fraction = effective_age - lower_age
+    lower = BASELINE_BIRTH_PROBABILITY_BY_AGE.get(lower_age, 0.0)
+    upper = BASELINE_BIRTH_PROBABILITY_BY_AGE.get(lower_age + 1, 0.0)
+    return lower * (1.0 - fraction) + upper * fraction
 
 
 def adjust_age_for_aces(
-    age: int, number_of_aces: int, tempo_years_per_ace: int = 3
-) -> int:
+    age: int,
+    number_of_aces: int,
+    pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
+) -> float:
     """
-    This adjusts the probability based on the number of aces.
+    Return the effective age at which an individual's birth probability is
+    evaluated.
 
     This is an approximation but is based on the first table from
     'Adverse Childhood Experiences, Early and Nonmarital Fertility,
@@ -344,14 +372,127 @@ def adjust_age_for_aces(
     is equivalent to the effect of being born to a mother approximately three
     year younger.
 
-    We approximate this by shifting the fertility schedule earlier:
+    We implement this as an acceleration of the life-history schedule rather
+    than as a rigid translation of it. The age axis is rescaled about the
+    youngest fertile age,
 
-        p(age) = p(age - tempo_years_per_ace * number_of_aces)
+        effective age = 15 + (age - 15) * pace,
+
+    and the birth probability is scaled by the same pace (see `birth`), so that
+    completed fertility is preserved. A rigid translation cannot do this: it
+    slides the fertile window below the youngest fertile age, and for large
+    ACE counts it
+    pushes the whole window off the bottom of the schedule, which both
+    destroys completed fertility and produces impossible ages at birth.
+
+    Because the schedule is compressed rather than moved, the shift in mean age
+    at childbearing saturates on its own (3.0 years at one ACE, 9.0 at eight),
+    so no cap on the ACE count is needed.
     """
-    return age - tempo_years_per_ace * number_of_aces
+    if age < YOUNGEST_FERTILE_AGE:
+        return float(age)
+    pace = life_history_pace(number_of_aces, pace_increase_per_ace)
+    return YOUNGEST_FERTILE_AGE + (age - YOUNGEST_FERTILE_AGE) * pace
 
 
-def sample_number_of_aces(sex: str) -> int:
+def fertility(
+    age: int,
+    completed_number_of_aces: int,
+    pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
+) -> float:
+    """
+    Birth probability before the quantum effect, i.e. the baseline schedule
+    with only the tempo effect applied.
+
+    Factored out so that the normalising mean multiplier can be computed with
+    the same weights the birth probabilities use.
+    """
+    if age < YOUNGEST_FERTILE_AGE:
+        return 0.0
+    pace = life_history_pace(completed_number_of_aces, pace_increase_per_ace)
+    effective_age = adjust_age_for_aces(
+        age=age,
+        number_of_aces=completed_number_of_aces,
+        pace_increase_per_ace=pace_increase_per_ace,
+    )
+    return pace * baseline_birth_probability(effective_age)
+
+
+def birth(
+    age: int,
+    number_of_aces: int = 0,
+    alpha: float = 1.0,
+    pace_increase_per_ace: float = PACE_INCREASE_PER_ACE,
+    completed_number_of_aces: int | None = None,
+    mean_fertility_multiplier: float = 1.0,
+    generator: np.random.Generator | None = None,
+) -> bool:
+    """
+    This uses data from the UN's department of economic and social affairs
+    - <https://population.un.org/wpp/Download/Standard/Fertility/>
+    to return a boolean representing whether or not someone (able to have a
+    birth) has a birth at a given age.
+
+    Parameters
+    ----------
+    age : int
+        The biological age.
+    number_of_aces : int
+        Number of adverse childhood experiences.
+    alpha : float
+        Multiplicative fertility factor (replicator-style fitness multiplier).
+        Under a coarse-grained two-type model (ACE=0 vs ACE>=1), this corresponds
+        directly to the analytical parameter via f_T = alpha * f_S.
+    pace_increase_per_ace : float
+        Increase in the life-history pace per ACE (the tempo effect).
+    mean_fertility_multiplier : float
+        Population mean of the quantum multiplier, weighted by baseline
+        fertility. Dividing by it holds total expected births at their
+        alpha = 1 level, so that alpha redistributes reproduction between
+        exposed and unexposed individuals rather than raising it overall.
+        This is the normalisation the replicator dynamic performs when it
+        divides by mean fitness. A value of 1.0 leaves fertility unnormalised.
+    completed_number_of_aces : int or None
+        ACE count at the end of childhood, which sets the life-history pace.
+        Defaults to `number_of_aces`. The tempo effect uses this while the
+        quantum effect uses the current count, so that recovery changes how
+        much an individual reproduces but not when.
+
+    We separate two mechanisms:
+
+      (1) Tempo: earlier reproductive timing, at unchanged completed fertility.
+      (2) Quantum: multiplicative increase in fertility intensity.
+    """
+    if age < YOUNGEST_FERTILE_AGE:
+        return False
+
+    # Tempo effect: compress the age axis and scale the hazard by the same
+    # pace, so that completed fertility is unchanged and only its timing moves.
+    # The pace is fixed by childhood adversity; recomputing it from the current
+    # count would let healing move an individual back onto the schedule.
+    if completed_number_of_aces is None:
+        completed_number_of_aces = number_of_aces
+    probability = fertility(
+        age=age,
+        completed_number_of_aces=completed_number_of_aces,
+        pace_increase_per_ace=pace_increase_per_ace,
+    )
+
+    # Quantum effect (replicator-style multiplier)
+    # Minimal two-type interpretation: traumatised if ACE >= 1
+    if number_of_aces >= 1:
+        probability = alpha * probability
+
+    # Normalise by the population mean multiplier, so alpha is a relative
+    # advantage rather than an absolute increase in fertility.
+    probability = probability / mean_fertility_multiplier
+
+    return bool(resolve_generator(generator).random() < min(1.0, probability))
+
+
+def sample_number_of_aces(
+    sex: str, generator: np.random.Generator | None = None
+) -> int:
     """
     This uses data from
 
@@ -399,10 +540,13 @@ def sample_number_of_aces(sex: str) -> int:
         [ace_data[number][sex] for number in aces_range]
     )
     p = p / p.sum()
-    return int(np.random.choice(a=aces_range, p=p))
+    return int(resolve_generator(generator).choice(a=np.arange(9), p=p))
 
 
-def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int:
+def sample_intergenerational_number_of_aces(
+    number_of_maternal_aces: int,
+    generator: np.random.Generator | None = None,
+) -> int:
     """
     This samples the number of aces of a child based on the number of aces from
     a mother.
@@ -413,7 +557,7 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int
     Which contains this table (Table 3):
 
     Mother ACES: 0                1                2-3              4+
-    Child 0:     42.6% (38.4-46.7) 37.8% (32.4-46.7) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
+    Child 0:     42.6% (38.4-46.7) 37.8% (32.4-43.1) 30.4% (24.7-36.1) 25.1% (16.2-34.0)
     Child 1:     25.8% (21.9-29.6) 29.7% (23.9-35.5) 28.4% (22.2-34.7) 23.2% (14.1-32.2)
     Child 2-3:   25.8% (21.9-29.7) 21.5% (16.3-26.7) 21.3% (15.7-26.8) 23.8% (15.6-32.0)
     Child 4+:    5.8% (4.0-7.7)    11.0% (6.3-15.6)  19.9% (13.7-26.1) 27.9% (18.9-36.9)
@@ -475,13 +619,15 @@ def sample_intergenerational_number_of_aces(number_of_maternal_aces: int) -> int
                 0.279 / 5,
             )
         )
-    aces_range = range(9)
     p = p / p.sum()
-    return int(np.random.choice(a=aces_range, p=p))
+    return int(resolve_generator(generator).choice(a=np.arange(9), p=p))
 
 
 def adjust_aces(
-    individual: Individual, probability_of_heal: float, probability_of_trauma: float
+    individual: Individual,
+    probability_of_heal: float,
+    probability_of_trauma: float,
+    generator: np.random.Generator | None = None,
 ) -> int:
     """
     Return the delta of the number of aces
@@ -489,11 +635,18 @@ def adjust_aces(
     - A child (less than 18) can gain another ace from an external factor.
     - An adult (18 or more) can reduce their number of aces by 1.
 
+    The two cases are mutually exclusive: healing represents adult recovery
+    processes, so a child whose trauma draw fails does not then get a chance to
+    heal. Exactly one uniform draw is consumed per individual per year.
+
     See e.g. "The Association Between Parent and Child ACEs is Buffered by
     Forgiveness of Others and Self-Forgiveness", J Child Adolesc Trauma (2023).
     """
-    if (individual.age < 18) and (np.random.random() < probability_of_trauma):
-        return min(8, individual.number_of_aces + 1) - individual.number_of_aces
-    if np.random.random() < probability_of_heal:
+    draws = resolve_generator(generator)
+    if individual.age < 18:
+        if draws.random() < probability_of_trauma:
+            return min(8, individual.number_of_aces + 1) - individual.number_of_aces
+        return 0
+    if draws.random() < probability_of_heal:
         return max(0, individual.number_of_aces - 1) - individual.number_of_aces
     return 0

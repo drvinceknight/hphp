@@ -1,7 +1,9 @@
 import argparse
-import os
 import csv
+import os
+
 import numpy as np
+import stet
 
 import hphp.simulation as sim
 
@@ -34,6 +36,16 @@ def parse_args():
 
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--output_dir", type=str, default="raw")
+    parser.add_argument(
+        "--stet_store",
+        type=str,
+        default="stet_store.csv",
+        help=(
+            "Record of completed parameter combinations. Delete it, or call "
+            "stet.reset on it, whenever the model or any unswept setting "
+            "changes, since only the swept parameters are keyed."
+        ),
+    )
 
     return parser.parse_args()
 
@@ -116,7 +128,6 @@ def main():
     csv_path = os.path.join(output_path, "main.csv")
     pyramid_path = os.path.join(output_path, "pyramids.csv")
 
-    # ---- collect all input parameters once ----
     input_params = {
         "repetitions": args.repetitions,
         "years": args.years,
@@ -128,6 +139,8 @@ def main():
         "trauma_threshold": args.trauma_threshold,
         "base_seed": args.seed,
     }
+
+    pyramid_fieldnames = ["rep", "year", "age_group", "males", "females"]
 
     fieldnames = [
         "rep",
@@ -143,67 +156,81 @@ def main():
         "mean_age_not_traumatised",
     ]
 
-    rows = []
-    pyramid_rows = []
-    pyramid_fieldnames = ["rep", "year", "age_group", "males", "females"]
+    @stet.once(
+        store=args.stet_store,
+        key=["alpha_per_mille", "heal_per_mille", "trauma_per_mille"],
+    )
+    def run_combination(alpha_per_mille, heal_per_mille, trauma_per_mille):
+        """
+        Run every repetition for one parameter combination and write its CSVs.
 
-    for rep in range(args.repetitions):
+        `stet` records only that the combination ran, so this function must
+        persist its own output. The keys are integers rather than the raw
+        floats so that a combination is identified exactly.
+        """
+        rows = []
+        pyramid_rows = []
 
-        seed = None if args.seed is None else args.seed + rep
+        for rep in range(args.repetitions):
+            seed = None if args.seed is None else args.seed + rep
 
-        initial_population = sim.get_population(
-            number_of_individuals=args.initial_population_size,
-            population_pyramid=sim.uk_population_pyramid,
-            seed=seed,
-        )
+            # One generator per replicate, shared between building the
+            # initial population and running the simulation, so that the two
+            # draw from a single continuous stream rather than restarting the
+            # same one twice.
+            generator = np.random.default_rng(seed)
 
-        history = sim.simulate(
-            number_of_years=args.years,
-            initial_population=initial_population,
-            probability_of_male_birth=args.probability_of_male_birth,
-            alpha=args.alpha,
-            probability_of_heal=args.probability_of_heal,
-            probability_of_trauma=args.probability_of_trauma,
-            seed=seed,
-        )
+            initial_population = sim.get_population(
+                number_of_individuals=args.initial_population_size,
+                population_pyramid=sim.uk_population_pyramid,
+                generator=generator,
+            )
 
-        for year, population in enumerate(history):
-            s = summarise_population(population, args.trauma_threshold)
+            history = sim.simulate(
+                number_of_years=args.years,
+                initial_population=initial_population,
+                probability_of_male_birth=args.probability_of_male_birth,
+                alpha=args.alpha,
+                probability_of_heal=args.probability_of_heal,
+                probability_of_trauma=args.probability_of_trauma,
+                generator=generator,
+            )
 
-            row = {
-                "rep": rep,
-                "year": year,
-                **input_params,
-                **s,
-            }
+            for year, population in enumerate(history):
+                summary = summarise_population(population, args.trauma_threshold)
+                rows.append({"rep": rep, "year": year, **input_params, **summary})
 
-            rows.append(row)
+                if year in PYRAMID_YEARS:
+                    male_counts, female_counts = age_distribution(population)
+                    for i, age_group in enumerate(AGE_BINS):
+                        pyramid_rows.append(
+                            {
+                                "rep": rep,
+                                "year": year,
+                                "age_group": age_group,
+                                "males": int(male_counts[i]),
+                                "females": int(female_counts[i]),
+                            }
+                        )
 
-            if year in PYRAMID_YEARS:
-                male_counts, female_counts = age_distribution(population)
-                for i, age_group in enumerate(AGE_BINS):
-                    pyramid_rows.append(
-                        {
-                            "rep": rep,
-                            "year": year,
-                            "age_group": age_group,
-                            "males": int(male_counts[i]),
-                            "females": int(female_counts[i]),
-                        }
-                    )
+        with open(csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
 
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+        with open(pyramid_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=pyramid_fieldnames)
+            writer.writeheader()
+            writer.writerows(pyramid_rows)
 
-    with open(pyramid_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=pyramid_fieldnames)
-        writer.writeheader()
-        writer.writerows(pyramid_rows)
+        print(f"Wrote results to {csv_path}")
+        print(f"Wrote pyramids to {pyramid_path}")
 
-    print(f"Wrote results to {csv_path}")
-    print(f"Wrote pyramids to {pyramid_path}")
+    run_combination(
+        alpha_per_mille=int(round(args.alpha * 1000)),
+        heal_per_mille=int(round(args.probability_of_heal * 1000)),
+        trauma_per_mille=int(round(args.probability_of_trauma * 1000)),
+    )
 
 
 if __name__ == "__main__":
