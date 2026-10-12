@@ -619,7 +619,6 @@ def sample_intergenerational_number_of_aces(
                 0.279 / 5,
             )
         )
-    aces_range = range(9)
     p = p / p.sum()
     return int(resolve_generator(generator).choice(a=np.arange(9), p=p))
 

@@ -163,7 +163,9 @@ def test_get_expected_difference_for_20_year_olds():
         generator = np.random.default_rng(0)
         counts.append(
             sum(
-                hphp.simulation.birth(age=age, number_of_aces=number_of_aces)
+                hphp.simulation.birth(
+                    age=age, number_of_aces=number_of_aces, generator=generator
+                )
                 for _ in range(number_of_repetitions)
             )
         )
@@ -539,7 +541,10 @@ def test_children_never_heal():
 
     deltas = [
         hphp.simulation.adjust_aces(
-            individual, probability_of_heal=0.5, probability_of_trauma=0.2
+            individual,
+            probability_of_heal=0.5,
+            probability_of_trauma=0.2,
+            generator=generator,
         )
         for _ in range(repetitions)
     ]
@@ -564,7 +569,10 @@ def test_adults_heal_at_the_healing_probability():
 
     deltas = [
         hphp.simulation.adjust_aces(
-            individual, probability_of_heal=0.5, probability_of_trauma=0.2
+            individual,
+            probability_of_heal=0.5,
+            probability_of_trauma=0.2,
+            generator=generator,
         )
         for _ in range(repetitions)
     ]

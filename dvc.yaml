@@ -12,7 +12,8 @@ stages:
     cmd: uv run python tex/figures/figure_3/main.py
     deps:
       - tex/figures/figure_3/main.py
-      - tex/figures/figure_4/data/raw
+      - src/hphp/birth_death.py
+      - src/hphp/simulation.py
     outs:
       - tex/figures/figure_3/main.pdf:
           cache: false   # keep in git
@@ -21,13 +22,22 @@ stages:
     cmd: uv run python tex/figures/figure_4/main.py
     deps:
       - tex/figures/figure_4/main.py
-      - tex/figures/figure_4/data/raw
+      - tex/figures/data/raw
     outs:
       - tex/figures/figure_4/main.pdf:
           cache: false   # keep in git
-      - tex/figures/figure_4/si.pdf:
+
+  figure_5:
+    cmd: uv run python tex/figures/figure_5/main.py
+    deps:
+      - tex/figures/figure_5/main.py
+      - tex/figures/data/raw
+    outs:
+      - tex/figures/figure_5/main.pdf:
           cache: false   # keep in git
-      - tex/figures/figure_4/si_threshold.pdf:
+      - tex/figures/figure_5/si.pdf:
+          cache: false   # keep in git
+      - tex/figures/figure_5/si_threshold.pdf:
           cache: false   # keep in git
 
   paper:
@@ -44,8 +54,9 @@ stages:
       - tex/figures/figure_2/main.pdf
       - tex/figures/figure_3/main.pdf
       - tex/figures/figure_4/main.pdf
-      - tex/figures/figure_4/si.pdf
-      - tex/figures/figure_4/si_threshold.pdf
+      - tex/figures/figure_5/main.pdf
+      - tex/figures/figure_5/si.pdf
+      - tex/figures/figure_5/si_threshold.pdf
     outs:
       - tex/main.pdf:
           cache: false   # keep in git
